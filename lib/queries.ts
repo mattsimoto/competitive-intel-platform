@@ -76,6 +76,7 @@ export async function listCompanies(search?: string): Promise<LandscapeRow[]> {
     .select(
       "id, name, competitive_score, confidence_score, intelligence_status, last_material_change_at, last_verified_at, competitive_relationships(internal_products(name))"
     )
+    .order("competitive_score", { ascending: false, nullsFirst: false })
     .order("confidence_score", { ascending: false, nullsFirst: false })
     .order("name", { ascending: true })
     .limit(500);
@@ -102,7 +103,7 @@ export async function getCompanyProfile(id: string) {
     .single();
   if (!company) return null;
 
-  const [products, rels, topics, customers, obs] = await Promise.all([
+  const [products, rels, topics, customers, obs, scoreRes] = await Promise.all([
     supabase.from("products").select("*").eq("company_id", id).order("name"),
     supabase
       .from("competitive_relationships")
@@ -115,6 +116,13 @@ export async function getCompanyProfile(id: string) {
       .select("field_name, supporting_text")
       .eq("company_id", id)
       .eq("observation_type", "positioning"),
+    supabase
+      .from("competitive_scores")
+      .select("total_score, explanation_json, calculated_at")
+      .eq("company_id", id)
+      .order("calculated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   const productIds = (products.data ?? []).map((p: any) => p.id);
@@ -141,5 +149,6 @@ export async function getCompanyProfile(id: string) {
     customers: (customers.data ?? []).map((c: any) => c.customers?.name).filter(Boolean),
     strengths: (obs.data ?? []).filter((o: any) => o.field_name === "strength").map((o: any) => o.supporting_text),
     weaknesses: (obs.data ?? []).filter((o: any) => o.field_name === "weakness").map((o: any) => o.supporting_text),
+    score: scoreRes.data ?? null,
   };
 }

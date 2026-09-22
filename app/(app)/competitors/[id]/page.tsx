@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCompanyProfile } from "@/lib/queries";
 import { ScoreBadge, ConfidenceBadge, StatusChip, Pill } from "@/components/badges";
+import { ScoreBreakdown } from "@/components/ScoreBreakdown";
 import { money, since } from "@/lib/format";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -17,7 +18,7 @@ export default async function CompetitorProfile({ params }: { params: Promise<{ 
   const { id } = await params;
   const data = await getCompanyProfile(id);
   if (!data) notFound();
-  const { company, products, areas, relationships, topics, customers, strengths, weaknesses } = data;
+  const { company, products, areas, relationships, topics, customers, strengths, weaknesses, score } = data;
 
   return (
     <div className="space-y-5">
@@ -60,6 +61,11 @@ export default async function CompetitorProfile({ params }: { params: Promise<{ 
           </div>
         </div>
       </div>
+
+      {/* Score breakdown */}
+      <Section title="Score Breakdown">
+        <ScoreBreakdown score={score} />
+      </Section>
 
       {/* Overview */}
       <Section title="Overview">
