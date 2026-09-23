@@ -152,3 +152,43 @@ export async function getCompanyProfile(id: string) {
     score: scoreRes.data ?? null,
   };
 }
+
+export interface ReviewItem {
+  id: string;
+  change_type: string;
+  summary: string | null;
+  significance_score: number | null;
+  confidence_score: number | null;
+  detected_at: string;
+  previous_value_json: any;
+  new_value_json: any;
+  company: { id: string; name: string } | null;
+  evidence: string | null;
+  source_url: string | null;
+}
+
+export async function listPendingChanges(): Promise<ReviewItem[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("competitive_changes")
+    .select(
+      "id, change_type, summary, significance_score, confidence_score, detected_at, previous_value_json, new_value_json, companies(id, name), observations(supporting_text, source_url)"
+    )
+    .eq("status", "pending")
+    .order("significance_score", { ascending: false, nullsFirst: false })
+    .order("confidence_score", { ascending: false, nullsFirst: false })
+    .limit(100);
+  return (data ?? []).map((r: any) => ({
+    id: r.id,
+    change_type: r.change_type,
+    summary: r.summary,
+    significance_score: r.significance_score,
+    confidence_score: r.confidence_score,
+    detected_at: r.detected_at,
+    previous_value_json: r.previous_value_json,
+    new_value_json: r.new_value_json,
+    company: r.companies ? { id: r.companies.id, name: r.companies.name } : null,
+    evidence: r.observations?.supporting_text ?? null,
+    source_url: r.observations?.source_url ?? null,
+  }));
+}

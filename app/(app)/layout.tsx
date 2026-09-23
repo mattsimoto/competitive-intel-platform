@@ -24,7 +24,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <div className="text-sm font-semibold">{orgName}</div>
           <div className="text-xs text-zinc-500">Competitive Intelligence</div>
         </div>
-        <Sidebar />
+        <Sidebar role={(profile as any)?.role} />
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-between border-b border-zinc-200 bg-white px-6 py-3">
