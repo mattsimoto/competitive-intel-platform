@@ -1,0 +1,22 @@
+{
+  "name": "cip-ingest",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Daily crawl + change detection + AI extraction for the Competitive Intelligence Platform",
+  "scripts": {
+    "ingest": "tsx ingest.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.0",
+    "@supabase/supabase-js": "^2.45.0",
+    "html-to-text": "^9.0.5"
+  },
+  "devDependencies": {
+    "@types/html-to-text": "^9.0.4",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}
