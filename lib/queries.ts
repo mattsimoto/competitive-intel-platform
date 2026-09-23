@@ -192,3 +192,119 @@ export async function listPendingChanges(): Promise<ReviewItem[]> {
     source_url: r.observations?.source_url ?? null,
   }));
 }
+
+// ---- Products screen -------------------------------------------------------
+export interface ProductRow {
+  id: string;
+  name: string;
+  product_url: string | null;
+  confidence_score: number | null;
+  intelligence_status: string;
+  company: { id: string; name: string } | null;
+  companyScore: number | null;
+  category: string | null;
+  price: { min: number | null; max: number | null; currency: string | null; unit: string | null } | null;
+}
+
+export async function listProducts(search?: string): Promise<ProductRow[]> {
+  const supabase = await createClient();
+  let q = supabase
+    .from("products")
+    .select(
+      "id, name, product_url, confidence_score, intelligence_status, companies(id, name, competitive_score), product_categories(name)"
+    )
+    .order("name")
+    .limit(500);
+  if (search && search.trim()) q = q.ilike("name", `%${search.trim()}%`);
+  const { data } = await q;
+
+  const ids = (data ?? []).map((p: any) => p.id);
+  const prices = ids.length
+    ? (
+        await supabase
+          .from("pricing_history")
+          .select("product_id, price_min, price_max, currency, pricing_unit, observed_at")
+          .in("product_id", ids)
+          .order("observed_at", { ascending: false })
+      ).data ?? []
+    : [];
+  const latest = new Map<string, any>();
+  for (const pr of prices) if (!latest.has(pr.product_id)) latest.set(pr.product_id, pr);
+
+  return (data ?? []).map((p: any) => ({
+    id: p.id,
+    name: p.name,
+    product_url: p.product_url,
+    confidence_score: p.confidence_score,
+    intelligence_status: p.intelligence_status,
+    company: p.companies ? { id: p.companies.id, name: p.companies.name } : null,
+    companyScore: p.companies?.competitive_score ?? null,
+    category: p.product_categories?.name ?? null,
+    price: latest.get(p.id)
+      ? { min: latest.get(p.id).price_min, max: latest.get(p.id).price_max, currency: latest.get(p.id).currency, unit: latest.get(p.id).pricing_unit }
+      : null,
+  }));
+}
+
+// ---- Pricing screen --------------------------------------------------------
+function priceMid(a: number | null, b: number | null): number | null {
+  if (a == null && b == null) return null;
+  if (a != null && b != null) return (a + b) / 2;
+  return (a ?? b)!;
+}
+
+export interface PricingRow {
+  productId: string;
+  productName: string;
+  company: { id: string; name: string } | null;
+  category: string | null;
+  current: { min: number | null; max: number | null; currency: string | null; unit: string | null };
+  previous: { min: number | null; max: number | null; currency: string | null } | null;
+  changePct: number | null;
+  observedAt: string;
+  confidence: number | null;
+  rawText: string | null;
+}
+
+export async function listPricing(search?: string): Promise<PricingRow[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("pricing_history")
+    .select(
+      "id, product_id, price_min, price_max, currency, pricing_unit, raw_price_text, observed_at, confidence_score, products(id, name, companies(id, name), product_categories(name))"
+    )
+    .order("observed_at", { ascending: false })
+    .limit(1000);
+
+  const byProduct = new Map<string, any[]>();
+  for (const r of data ?? []) {
+    const arr = byProduct.get(r.product_id) ?? [];
+    arr.push(r);
+    byProduct.set(r.product_id, arr);
+  }
+
+  const rows: PricingRow[] = [];
+  for (const [pid, arr] of byProduct) {
+    const cur = arr[0];
+    const prev = arr[1] ?? null;
+    const p = cur.products;
+    const curMid = priceMid(cur.price_min, cur.price_max);
+    const prevMid = prev ? priceMid(prev.price_min, prev.price_max) : null;
+    const changePct = curMid != null && prevMid != null && prevMid !== 0 ? Math.round(((curMid - prevMid) / prevMid) * 100) : null;
+    rows.push({
+      productId: pid,
+      productName: p?.name ?? "—",
+      company: p?.companies ? { id: p.companies.id, name: p.companies.name } : null,
+      category: p?.product_categories?.name ?? null,
+      current: { min: cur.price_min, max: cur.price_max, currency: cur.currency, unit: cur.pricing_unit },
+      previous: prev ? { min: prev.price_min, max: prev.price_max, currency: prev.currency } : null,
+      changePct,
+      observedAt: cur.observed_at,
+      confidence: cur.confidence_score,
+      rawText: cur.raw_price_text,
+    });
+  }
+  rows.sort((a, b) => (a.company?.name ?? "").localeCompare(b.company?.name ?? "") || a.productName.localeCompare(b.productName));
+  const q = search?.trim().toLowerCase();
+  return q ? rows.filter((r) => r.productName.toLowerCase().includes(q) || (r.company?.name ?? "").toLowerCase().includes(q)) : rows;
+}
