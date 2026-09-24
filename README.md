@@ -157,6 +157,38 @@ npm run dev                          # http://localhost:3000
 
 This project's production build has been verified with `next build`.
 
+## 5. Ingestion pipeline (daily crawl + AI)
+
+The pipeline (`scripts/ingest/`) runs as a scheduled GitHub Action
+(`.github/workflows/ingest.yml`) — no separate host. Each run: fetches due
+active sources, cleans HTML to text, hashes, and compares. Unchanged pages stop
+before any AI runs (the cost gate). Changed pages are stored, classified with
+Claude (relevance), and if relevant, extracted into an observation plus a
+**pending** `competitive_change` that appears in the Review Queue. Nothing is
+auto-approved in this version — a human verifies every detection.
+
+Setup:
+
+1. **Seed sources** (SQL Editor): run `supabase/migrations/0006_seed_sources.sql`,
+   then `select seed_company_sources();` (creates a Website source per company
+   and a Product Page source per product).
+2. **Add the files to GitHub:** upload `scripts/ingest/` (folder), and create
+   `.github/workflows/ingest.yml` (use Add file → Create new file and type that
+   path so the dot-folder is created correctly).
+3. **Add repo secrets** (Settings → Secrets and variables → Actions → New
+   repository secret): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
+   `ANTHROPIC_API_KEY`. The service-role key and AI key live only in Actions,
+   never in the browser.
+4. **Run it:** Actions tab → "Ingest competitive intelligence" → Run workflow
+   (it also runs daily at 08:00 UTC). Watch the run log for
+   `{checked, changed, detections, errors}`, then check the Review Queue.
+
+Tuning via the workflow env: `ANTHROPIC_MODEL` (default `claude-haiku-4-5-20251001`),
+`INGEST_MAX_SOURCES` (default 25 per run — raise once you've confirmed it works).
+
+Limits of v1: plain fetch only (JS-heavy pages won't yield text — a managed
+crawl API or headless browser is the upgrade), and no auto-approval yet.
+
 ## Design notes
 
 - **Multi-tenant by construction.** Every row carries `organization_id`; RLS keys
