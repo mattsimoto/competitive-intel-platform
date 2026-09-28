@@ -81,6 +81,7 @@ async function main() {
         title: f.title,
         cleaned_text: f.text,
         content_hash: f.hash,
+        metadata_json: f.metaDescription ? { description: f.metaDescription } : {},
         fetch_status: "success",
       })
       .select("id")

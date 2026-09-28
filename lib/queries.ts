@@ -222,9 +222,11 @@ export interface ProductRow {
   companyScore: number | null;
   category: string | null;
   price: { min: number | null; max: number | null; currency: string | null; unit: string | null } | null;
+  sourceStatus: string | null;
+  sourceError: string | null;
 }
 
-export async function listProducts(search?: string): Promise<ProductRow[]> {
+export async function listProducts(search?: string, view?: string): Promise<ProductRow[]> {
   const supabase = await createClient();
   let q = supabase
     .from("products")
@@ -249,19 +251,36 @@ export async function listProducts(search?: string): Promise<ProductRow[]> {
   const latest = new Map<string, any>();
   for (const pr of prices) if (!latest.has(pr.product_id)) latest.set(pr.product_id, pr);
 
-  return (data ?? []).map((p: any) => ({
-    id: p.id,
-    name: p.name,
-    product_url: p.product_url,
-    confidence_score: p.confidence_score,
-    intelligence_status: p.intelligence_status,
-    company: p.companies ? { id: p.companies.id, name: p.companies.name } : null,
-    companyScore: p.companies?.competitive_score ?? null,
-    category: p.product_categories?.name ?? null,
-    price: latest.get(p.id)
-      ? { min: latest.get(p.id).price_min, max: latest.get(p.id).price_max, currency: latest.get(p.id).currency, unit: latest.get(p.id).pricing_unit }
-      : null,
-  }));
+  // Crawl status per product: match its URL to a Product Page source.
+  const urls = (data ?? []).map((p: any) => p.product_url).filter(Boolean);
+  const sources = urls.length
+    ? (await supabase.from("company_sources").select("company_id, url, status, last_error").in("url", urls)).data ?? []
+    : [];
+  const sourceByKey = new Map<string, any>();
+  for (const s of sources) sourceByKey.set(`${s.company_id}|${s.url}`, s);
+
+  let rows = (data ?? []).map((p: any) => {
+    const src = p.companies ? sourceByKey.get(`${p.companies.id}|${p.product_url}`) : null;
+    return {
+      id: p.id,
+      name: p.name,
+      product_url: p.product_url,
+      confidence_score: p.confidence_score,
+      intelligence_status: p.intelligence_status,
+      company: p.companies ? { id: p.companies.id, name: p.companies.name } : null,
+      companyScore: p.companies?.competitive_score ?? null,
+      category: p.product_categories?.name ?? null,
+      price: latest.get(p.id)
+        ? { min: latest.get(p.id).price_min, max: latest.get(p.id).price_max, currency: latest.get(p.id).currency, unit: latest.get(p.id).pricing_unit }
+        : null,
+      sourceStatus: src?.status ?? null,
+      sourceError: src?.last_error ?? null,
+    };
+  });
+
+  if (view === "live") rows = rows.filter((r) => r.sourceStatus === "ok");
+  else if (view === "priced") rows = rows.filter((r) => r.price != null);
+  return rows;
 }
 
 // ---- Pricing screen --------------------------------------------------------

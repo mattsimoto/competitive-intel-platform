@@ -5,6 +5,7 @@ export interface Fetched {
   ok: boolean;
   status: number;
   title: string | null;
+  metaDescription: string | null;
   text: string;
   hash: string;
   error?: string;
@@ -23,6 +24,12 @@ export async function fetchAndClean(url: string, timeoutMs = 20000): Promise<Fet
     clearTimeout(timer);
     const html = await res.text();
     const title = (html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1] ?? "").trim() || null;
+    const metaDescription = (
+      html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']*)["']/i)?.[1] ??
+      html.match(/<meta[^>]+content=["']([^"']*)["'][^>]+name=["']description["']/i)?.[1] ??
+      html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']*)["']/i)?.[1] ??
+      ""
+    ).trim() || null;
 
     const text = convert(html, {
       wordwrap: false,
@@ -40,8 +47,8 @@ export async function fetchAndClean(url: string, timeoutMs = 20000): Promise<Fet
       .trim();
 
     const hash = createHash("sha256").update(text).digest("hex");
-    return { ok: res.ok, status: res.status, title, text, hash };
+    return { ok: res.ok, status: res.status, title, metaDescription, text, hash };
   } catch (e: unknown) {
-    return { ok: false, status: 0, title: null, text: "", hash: "", error: e instanceof Error ? e.message : String(e) };
+    return { ok: false, status: 0, title: null, metaDescription: null, text: "", hash: "", error: e instanceof Error ? e.message : String(e) };
   }
 }
