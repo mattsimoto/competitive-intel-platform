@@ -2,8 +2,14 @@ name: Ingest competitive intelligence
 
 on:
   schedule:
-    - cron: "0 8 * * *"   # daily at 08:00 UTC
-  workflow_dispatch: {}   # allow manual runs from the Actions tab
+    - cron: "0 8 * * *"   # daily at 08:00 UTC (runs crawl-only by default)
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Run mode"
+        type: choice
+        options: [crawl-only, full]
+        default: crawl-only
 
 concurrency:
   group: ingest
@@ -29,4 +35,6 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           ANTHROPIC_MODEL: claude-haiku-4-5-20251001
           INGEST_MAX_SOURCES: "25"
+          # "full" only when manually chosen AND you've added ANTHROPIC_API_KEY; otherwise crawl-only.
+          INGEST_NO_AI: ${{ (github.event.inputs.mode == 'full') && '0' || '1' }}
         run: npx tsx ingest.ts
