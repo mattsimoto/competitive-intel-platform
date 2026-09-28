@@ -18,7 +18,7 @@ export default async function CompetitorProfile({ params }: { params: Promise<{ 
   const { id } = await params;
   const data = await getCompanyProfile(id);
   if (!data) notFound();
-  const { company, products, areas, relationships, topics, customers, strengths, weaknesses, score } = data;
+  const { company, products, areas, relationships, topics, customers, strengths, weaknesses, score, sources } = data;
 
   return (
     <div className="space-y-5">
@@ -178,6 +178,53 @@ export default async function CompetitorProfile({ params }: { params: Promise<{ 
           </table>
           {data.pricing.length === 0 && <p className="py-4 text-sm text-zinc-400">No pricing on file.</p>}
         </div>
+      </Section>
+
+      {/* Sources */}
+      <Section title={`Sources (${sources.length})`}>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-zinc-200 text-left text-xs uppercase tracking-wide text-zinc-500">
+                <th className="px-2 py-2 font-medium">Source</th>
+                <th className="px-2 py-2 font-medium">Type</th>
+                <th className="px-2 py-2 font-medium">Status</th>
+                <th className="px-2 py-2 font-medium">Last Checked</th>
+                <th className="px-2 py-2 font-medium">Last Changed</th>
+                <th className="px-2 py-2 font-medium">Priority</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sources.map((s: any) => {
+                const tone = s.status === "ok" ? "green" : s.status === "error" ? "red" : "gray";
+                const statusLabel = s.status === "never_run" ? "Never run" : s.status.replace(/\b\w/, (c: string) => c.toUpperCase());
+                return (
+                  <tr key={s.id} className="border-b border-zinc-100 align-top">
+                    <td className="px-2 py-2">
+                      <a href={s.url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline break-all">{s.name ?? s.url}</a>
+                      {s.status === "error" && s.last_error && (
+                        <div className="mt-0.5 text-xs text-red-600">{s.last_error}</div>
+                      )}
+                    </td>
+                    <td className="px-2 py-2">{s.type ? <Pill>{s.type}</Pill> : <span className="text-zinc-400">—</span>}</td>
+                    <td className="px-2 py-2">
+                      <Pill tone={tone}>{statusLabel}</Pill>
+                      {s.hasSnapshot && <span className="ml-1 text-xs text-zinc-400">· snapshot</span>}
+                    </td>
+                    <td className="px-2 py-2 whitespace-nowrap text-zinc-500">{since(s.last_checked_at)}</td>
+                    <td className="px-2 py-2 whitespace-nowrap text-zinc-500">{since(s.last_changed_at)}</td>
+                    <td className="px-2 py-2 tabular-nums text-zinc-500">{s.priority}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {sources.length === 0 && <p className="py-4 text-sm text-zinc-400">No monitored sources.</p>}
+        </div>
+        <p className="mt-3 text-xs text-zinc-400">
+          Sources are crawled daily by the ingestion pipeline. “Snapshot” means the latest fetched
+          content is stored. Errors (dead links, bot-blocked, or JS-only pages) are shown inline.
+        </p>
       </Section>
 
       {relationships.length > 0 && relationships.some((r: any) => r.notes) && (

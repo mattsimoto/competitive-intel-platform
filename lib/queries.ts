@@ -104,7 +104,7 @@ export async function getCompanyProfile(id: string) {
     .single();
   if (!company) return null;
 
-  const [products, rels, topics, customers, obs, scoreRes] = await Promise.all([
+  const [products, rels, topics, customers, obs, scoreRes, sourcesRes] = await Promise.all([
     supabase.from("products").select("*").eq("company_id", id).order("name"),
     supabase
       .from("competitive_relationships")
@@ -124,6 +124,11 @@ export async function getCompanyProfile(id: string) {
       .order("calculated_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from("company_sources")
+      .select("id, name, url, priority, status, last_checked_at, last_changed_at, last_error, content_hash, source_types(name)")
+      .eq("company_id", id)
+      .order("priority", { ascending: true }),
   ]);
 
   const productIds = (products.data ?? []).map((p: any) => p.id);
@@ -151,6 +156,18 @@ export async function getCompanyProfile(id: string) {
     strengths: (obs.data ?? []).filter((o: any) => o.field_name === "strength").map((o: any) => o.supporting_text),
     weaknesses: (obs.data ?? []).filter((o: any) => o.field_name === "weakness").map((o: any) => o.supporting_text),
     score: scoreRes.data ?? null,
+    sources: (sourcesRes.data ?? []).map((s: any) => ({
+      id: s.id,
+      name: s.name,
+      url: s.url,
+      priority: s.priority,
+      status: s.status,
+      last_checked_at: s.last_checked_at,
+      last_changed_at: s.last_changed_at,
+      last_error: s.last_error,
+      hasSnapshot: !!s.content_hash,
+      type: s.source_types?.name ?? null,
+    })),
   };
 }
 
