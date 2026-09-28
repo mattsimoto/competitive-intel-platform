@@ -176,12 +176,15 @@ Setup:
    `.github/workflows/ingest.yml` (use Add file → Create new file and type that
    path so the dot-folder is created correctly).
 3. **Add repo secrets** (Settings → Secrets and variables → Actions → New
-   repository secret): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
-   `ANTHROPIC_API_KEY`. The service-role key and AI key live only in Actions,
-   never in the browser.
-4. **Run it:** Actions tab → "Ingest competitive intelligence" → Run workflow
-   (it also runs daily at 08:00 UTC). Watch the run log for
-   `{checked, changed, detections, errors}`, then check the Review Queue.
+   repository secret): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`. Add
+   `ANTHROPIC_API_KEY` only when you want the AI half (full mode). The
+   service-role and AI keys live only in Actions, never in the browser.
+4. **Run it:** Actions tab → "Ingest competitive intelligence" → Run workflow.
+   The **mode** dropdown defaults to **crawl-only** (fetch, detect changes, store
+   snapshots — no AI, no key needed). Choose **full** only after adding
+   `ANTHROPIC_API_KEY`, to also classify + extract into the Review Queue. The
+   daily scheduled run is always crawl-only. The log prints
+   `{mode, checked, changed, unchanged, detections, errors}`.
 
 Tuning via the workflow env: `ANTHROPIC_MODEL` (default `claude-haiku-4-5-20251001`),
 `INGEST_MAX_SOURCES` (default 25 per run — raise once you've confirmed it works).

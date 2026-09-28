@@ -19,12 +19,13 @@ import { mapObservationType } from "./lib/mapping.js";
 
 const MAX_SOURCES = Number(process.env.INGEST_MAX_SOURCES ?? 25);
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-haiku-4-5-20251001";
+const NO_AI = process.env.INGEST_NO_AI === "1" || process.argv.includes("--no-ai");
 
 async function main() {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) throw new Error("Missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY");
-  if (!process.env.ANTHROPIC_API_KEY) throw new Error("Missing ANTHROPIC_API_KEY");
+  if (!NO_AI && !process.env.ANTHROPIC_API_KEY) throw new Error("Missing ANTHROPIC_API_KEY (or run crawl-only with INGEST_NO_AI=1)");
 
   const db = createClient(url, key, { auth: { persistSession: false } });
 
@@ -89,6 +90,8 @@ async function main() {
       .update({ last_checked_at: now, status: "ok", content_hash: f.hash, last_changed_at: now, last_success_at: now })
       .eq("id", s.id);
 
+    if (NO_AI) continue; // crawl-only: the changed document is stored; AI half is skipped
+
     // Step 4-5 — Diff + relevance classification (Prompt 1).
     const delta = addedLines(prevDoc?.cleaned_text ?? null, f.text);
     const companyName = (s as any).companies?.name ?? "";
@@ -133,7 +136,7 @@ async function main() {
     stats.detections++;
   }
 
-  console.log(JSON.stringify({ model: MODEL, ...stats }));
+  console.log(JSON.stringify({ mode: NO_AI ? "crawl-only" : "full", model: NO_AI ? null : MODEL, ...stats }));
 }
 
 main().catch((e) => {

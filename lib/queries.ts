@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { money } from "@/lib/format";
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -307,4 +308,230 @@ export async function listPricing(search?: string): Promise<PricingRow[]> {
   rows.sort((a, b) => (a.company?.name ?? "").localeCompare(b.company?.name ?? "") || a.productName.localeCompare(b.productName));
   const q = search?.trim().toLowerCase();
   return q ? rows.filter((r) => r.productName.toLowerCase().includes(q) || (r.company?.name ?? "").toLowerCase().includes(q)) : rows;
+}
+
+// ---- Markets & Topics ------------------------------------------------------
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+export interface TopicRow {
+  id: string;
+  name: string;
+  activeCompetitors: number;
+  activeProducts: number;
+  newEntrants30: number;
+  newEntrants90: number;
+  recentActivity: string | null;
+}
+
+export async function listTopics(): Promise<TopicRow[]> {
+  const supabase = await createClient();
+  const [topicsRes, ctRes, ptRes] = await Promise.all([
+    supabase.from("topics").select("id, name").eq("active", true).order("name"),
+    supabase.from("company_topics").select("topic_id, company_id, first_observed_at, last_activity_at"),
+    supabase.from("product_topics").select("topic_id, product_id"),
+  ]);
+  const now = Date.now();
+  const ct = ctRes.data ?? [];
+  const pt = ptRes.data ?? [];
+
+  return (topicsRes.data ?? []).map((t: any) => {
+    const links = ct.filter((r: any) => r.topic_id === t.id);
+    const prods = pt.filter((r: any) => r.topic_id === t.id);
+    const companies = new Set(links.map((r: any) => r.company_id));
+    const within = (days: number) =>
+      new Set(links.filter((r: any) => r.first_observed_at && now - new Date(r.first_observed_at).getTime() <= days * DAY_MS).map((r: any) => r.company_id)).size;
+    const lastActivity = links
+      .map((r: any) => r.last_activity_at)
+      .filter(Boolean)
+      .sort()
+      .pop() ?? null;
+    return {
+      id: t.id,
+      name: t.name,
+      activeCompetitors: companies.size,
+      activeProducts: new Set(prods.map((r: any) => r.product_id)).size,
+      newEntrants30: within(30),
+      newEntrants90: within(90),
+      recentActivity: lastActivity,
+    };
+  });
+}
+
+export async function getTopicDetail(id: string) {
+  const supabase = await createClient();
+  const { data: topic } = await supabase.from("topics").select("id, name, description").eq("id", id).single();
+  if (!topic) return null;
+  const [companies, products] = await Promise.all([
+    supabase.from("company_topics").select("companies(id, name, competitive_score, confidence_score)").eq("topic_id", id),
+    supabase.from("product_topics").select("products(id, name, companies(name))").eq("topic_id", id),
+  ]);
+  return {
+    topic,
+    companies: (companies.data ?? []).map((r: any) => r.companies).filter(Boolean),
+    products: (products.data ?? []).map((r: any) => r.products).filter(Boolean),
+  };
+}
+
+// ---- Activity --------------------------------------------------------------
+export interface ActivityRow {
+  id: string;
+  change_type: string;
+  summary: string | null;
+  significance_score: number | null;
+  confidence_score: number | null;
+  detected_at: string;
+  status: string;
+  company: { id: string; name: string } | null;
+  evidence: string | null;
+  source_url: string | null;
+}
+
+export async function listActivity(opts: { status?: string; changeType?: string } = {}): Promise<ActivityRow[]> {
+  const supabase = await createClient();
+  let q = supabase
+    .from("competitive_changes")
+    .select("id, change_type, summary, significance_score, confidence_score, detected_at, status, companies(id, name), observations(supporting_text, source_url)")
+    .order("detected_at", { ascending: false })
+    .limit(200);
+  if (opts.status && opts.status !== "all") q = q.eq("status", opts.status);
+  if (opts.changeType && opts.changeType !== "all") q = q.eq("change_type", opts.changeType);
+  const { data } = await q;
+  return (data ?? []).map((r: any) => ({
+    id: r.id,
+    change_type: r.change_type,
+    summary: r.summary,
+    significance_score: r.significance_score,
+    confidence_score: r.confidence_score,
+    detected_at: r.detected_at,
+    status: r.status,
+    company: r.companies ? { id: r.companies.id, name: r.companies.name } : null,
+    evidence: r.observations?.supporting_text ?? null,
+    source_url: r.observations?.source_url ?? null,
+  }));
+}
+
+// ---- Admin -----------------------------------------------------------------
+export async function getAdminData() {
+  const supabase = await createClient();
+  const [weights, users, cats, topics, ctypes, stypes, regions, internal] = await Promise.all([
+    supabase.from("scoring_weights").select("factor, weight, active").order("weight", { ascending: false }),
+    supabase.from("users").select("id, email, full_name, role, active").order("email"),
+    supabase.from("product_categories").select("id, name").order("name"),
+    supabase.from("topics").select("id, name").order("name"),
+    supabase.from("company_types").select("id, name").order("name"),
+    supabase.from("source_types").select("id, name").order("name"),
+    supabase.from("regions").select("id, name").order("name"),
+    supabase.from("internal_products").select("id, name").order("name"),
+  ]);
+  return {
+    weights: weights.data ?? [],
+    users: users.data ?? [],
+    taxonomies: {
+      product_categories: cats.data ?? [],
+      topics: topics.data ?? [],
+      company_types: ctypes.data ?? [],
+      source_types: stypes.data ?? [],
+      regions: regions.data ?? [],
+      internal_products: internal.data ?? [],
+    },
+  };
+}
+
+// ---- Ask Intelligence (deterministic structured query) ---------------------
+export interface AskRecord { label: string; sublabel?: string; href?: string }
+export interface AskResult { intent: string; summary: string; records: AskRecord[]; caveat?: string }
+
+async function companiesInAllAreas(
+  supabase: any,
+  areas: { id: string; name: string }[],
+  names: string[]
+): Promise<AskRecord[]> {
+  const ids = names
+    .map((n) => areas.find((a) => a.name.toLowerCase() === n.toLowerCase())?.id)
+    .filter(Boolean) as string[];
+  if (!ids.length) return [];
+  const { data } = await supabase
+    .from("competitive_relationships")
+    .select("competitor_company_id, internal_product_id, companies(id, name, competitive_score)")
+    .in("internal_product_id", ids)
+    .eq("active", true);
+  const byCompany = new Map<string, { company: any; areas: Set<string> }>();
+  for (const r of data ?? []) {
+    const entry = byCompany.get(r.competitor_company_id) ?? { company: r.companies, areas: new Set<string>() };
+    entry.areas.add(r.internal_product_id);
+    byCompany.set(r.competitor_company_id, entry);
+  }
+  const recs: AskRecord[] = [];
+  for (const [cid, v] of byCompany) {
+    if (ids.every((id) => v.areas.has(id))) {
+      recs.push({
+        label: v.company?.name ?? "Company",
+        sublabel: `Score ${v.company?.competitive_score == null ? "—" : Math.round(v.company.competitive_score)}`,
+        href: `/competitors/${cid}`,
+      });
+    }
+  }
+  return recs.sort((a, b) => a.label.localeCompare(b.label));
+}
+
+export async function askIntelligence(q: string): Promise<AskResult> {
+  const supabase = await createClient();
+  const text = q.trim().toLowerCase();
+  const caveat = "Answered from imported structured data (confidence 60, pending verification).";
+  const { data: areas } = await supabase.from("internal_products").select("id, name");
+  const areaList = (areas ?? []) as { id: string; name: string }[];
+  const foundAreas = areaList.map((a) => a.name).filter((n) => text.includes(n.toLowerCase()));
+
+  // 1) Price threshold: "under $20,000"
+  const priceMatch = text.match(/(?:under|below|less than|cheaper than)\s*\$?\s*([\d,]+)/);
+  if (priceMatch) {
+    const n = Number(priceMatch[1].replace(/,/g, ""));
+    const { data: ph } = await supabase
+      .from("pricing_history")
+      .select("product_id, price_min, price_max, currency, products(name, companies(id, name))")
+      .order("observed_at", { ascending: false });
+    const seen = new Set<string>();
+    const recs: AskRecord[] = [];
+    for (const r of ph ?? []) {
+      if (seen.has(r.product_id)) continue;
+      seen.add(r.product_id);
+      const val = r.price_max ?? r.price_min;
+      if (val != null && val <= n) {
+        const p: any = r.products;
+        recs.push({
+          label: p?.name ?? "Product",
+          sublabel: `${p?.companies?.name ?? ""} · ${money(r.price_min, r.price_max, r.currency ?? "USD")}`,
+          href: p?.companies?.id ? `/competitors/${p.companies.id}` : undefined,
+        });
+      }
+    }
+    return { intent: "pricing", summary: `${recs.length} offering(s) at or under $${n.toLocaleString()}, from observed pricing.`, records: recs.slice(0, 50), caveat };
+  }
+
+  // 2) Overlap across two areas
+  if ((text.includes("overlap") || text.includes("both")) && foundAreas.length >= 2) {
+    const recs = await companiesInAllAreas(supabase, areaList, [foundAreas[0], foundAreas[1]]);
+    return { intent: "overlap", summary: `${recs.length} companies compete across both ${foundAreas[0]} and ${foundAreas[1]}.`, records: recs, caveat };
+  }
+
+  // 3) Single-area query
+  if (foundAreas.length >= 1) {
+    const recs = await companiesInAllAreas(supabase, areaList, [foundAreas[0]]);
+    return { intent: "area", summary: `${recs.length} companies compete in ${foundAreas[0]}.`, records: recs, caveat };
+  }
+
+  // 4) Top scores
+  if (/(top|highest|strongest|biggest|leading|best)/.test(text) || text.includes("score")) {
+    const { data } = await supabase.from("companies").select("id, name, competitive_score").order("competitive_score", { ascending: false, nullsFirst: false }).limit(10);
+    const recs = (data ?? []).map((c: any) => ({ label: c.name, sublabel: `Score ${c.competitive_score == null ? "—" : Math.round(c.competitive_score)}`, href: `/competitors/${c.id}` }));
+    return { intent: "top", summary: "Competitors with the highest competitive scores.", records: recs, caveat };
+  }
+
+  // 5) Fallback: company-name search
+  const { data } = await supabase.from("companies").select("id, name, competitive_score").ilike("name", `%${q.trim()}%`).limit(20);
+  if ((data ?? []).length) {
+    const recs = (data ?? []).map((c: any) => ({ label: c.name, sublabel: `Score ${c.competitive_score == null ? "—" : Math.round(c.competitive_score)}`, href: `/competitors/${c.id}` }));
+    return { intent: "search", summary: `${recs.length} companies match “${q.trim()}”.`, records: recs, caveat };
+  }
+  return { intent: "none", summary: "I couldn't map that to the structured data. Try one of the examples below — free-form questions unlock when the AI key is added.", records: [] };
 }

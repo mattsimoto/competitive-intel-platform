@@ -6,24 +6,26 @@ const NAV = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/competitors", label: "Competitors" },
   { href: "/products", label: "Products" },
-  { href: "/topics", label: "Markets & Topics", soon: true },
+  { href: "/topics", label: "Markets & Topics" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/activity", label: "Activity", soon: true },
+  { href: "/activity", label: "Activity" },
   { href: "/watchlists", label: "Watchlists", soon: true },
-  { href: "/ask", label: "Ask Intelligence", soon: true },
+  { href: "/ask", label: "Ask Intelligence" },
   { href: "/review", label: "Review Queue", review: true },
-  { href: "/admin", label: "Admin", soon: true },
+  { href: "/admin", label: "Admin", admin: true },
 ];
 
 export function Sidebar({ role }: { role?: string }) {
   const path = usePathname();
   const canReview = role === "administrator" || role === "analyst";
+  const canAdmin = role === "administrator";
 
   return (
     <nav className="flex flex-col gap-0.5 p-3">
       {NAV.map((item) => {
         // Review Queue is hidden for viewers (spec §4).
         if (item.review && !canReview) return null;
+        if ((item as any).admin && !canAdmin) return null;
         const active = path === item.href || path.startsWith(item.href + "/");
         const disabled = !!item.soon;
         return (
