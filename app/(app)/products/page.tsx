@@ -53,9 +53,8 @@ export default async function ProductsPage({
             {products.map((p) => (
               <tr key={p.id} className="border-b border-zinc-100 hover:bg-zinc-50">
                 <td className="px-4 py-2 font-medium text-zinc-900">
-                  {p.product_url ? (
-                    <a href={p.product_url} target="_blank" rel="noreferrer" className="hover:underline">{p.name}</a>
-                  ) : p.name}
+                  <Link href={`/products/${p.id}`} className="hover:underline">{p.name}</Link>
+                  {p.product_url && <a href={p.product_url} target="_blank" rel="noreferrer" className="ml-1 text-xs text-zinc-400 hover:text-blue-600">↗</a>}
                 </td>
                 <td className="px-4 py-2">
                   {p.company ? (

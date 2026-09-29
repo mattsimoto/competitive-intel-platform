@@ -601,3 +601,113 @@ export async function getBrief(id: string) {
   const { data } = await supabase.from("market_briefs").select("*").eq("id", id).single();
   return data ?? null;
 }
+
+// ---- Watchlists ------------------------------------------------------------
+export interface WatchlistRow {
+  id: string;
+  name: string;
+  description: string | null;
+  shared: boolean;
+  itemCount: number;
+}
+
+export async function listWatchlists(): Promise<WatchlistRow[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("watchlists")
+    .select("id, name, description, shared, watchlist_items(count)")
+    .order("created_at", { ascending: false });
+  return (data ?? []).map((w: any) => ({
+    id: w.id, name: w.name, description: w.description, shared: w.shared,
+    itemCount: w.watchlist_items?.[0]?.count ?? 0,
+  }));
+}
+
+export async function getWatchlist(id: string) {
+  const supabase = await createClient();
+  const { data: watchlist } = await supabase.from("watchlists").select("*").eq("id", id).single();
+  if (!watchlist) return null;
+
+  const { data: items } = await supabase.from("watchlist_items").select("id, entity_type, entity_id").eq("watchlist_id", id);
+  const of = (t: string) => (items ?? []).filter((i: any) => i.entity_type === t);
+  const companyItems = of("company"), productItems = of("product"), topicItems = of("topic");
+
+  const [companies, products, topics] = await Promise.all([
+    companyItems.length ? supabase.from("companies").select("id, name, competitive_score").in("id", companyItems.map((i: any) => i.entity_id)) : Promise.resolve({ data: [] as any[] }),
+    productItems.length ? supabase.from("products").select("id, name, companies(name)").in("id", productItems.map((i: any) => i.entity_id)) : Promise.resolve({ data: [] as any[] }),
+    topicItems.length ? supabase.from("topics").select("id, name").in("id", topicItems.map((i: any) => i.entity_id)) : Promise.resolve({ data: [] as any[] }),
+  ]);
+
+  const companyList = companyItems.map((i: any) => {
+    const c = (companies.data ?? []).find((x: any) => x.id === i.entity_id);
+    return { itemId: i.id, id: i.entity_id, name: c?.name ?? "(removed)", score: c?.competitive_score ?? null };
+  });
+  const productList = productItems.map((i: any) => {
+    const p = (products.data ?? []).find((x: any) => x.id === i.entity_id);
+    return { itemId: i.id, id: i.entity_id, name: p?.name ?? "(removed)", company: p?.companies?.name ?? null };
+  });
+  const topicList = topicItems.map((i: any) => {
+    const t = (topics.data ?? []).find((x: any) => x.id === i.entity_id);
+    return { itemId: i.id, id: i.entity_id, name: t?.name ?? "(removed)" };
+  });
+
+  let activity: any[] = [];
+  const companyIds = companyList.map((c) => c.id);
+  if (companyIds.length) {
+    const { data } = await supabase
+      .from("competitive_changes")
+      .select("id, change_type, summary, detected_at, status, companies(id, name)")
+      .in("company_id", companyIds)
+      .order("detected_at", { ascending: false })
+      .limit(50);
+    activity = data ?? [];
+  }
+  return { watchlist, companyList, productList, topicList, activity };
+}
+
+/** Minimal option lists for the watchlist add-pickers. */
+export async function getPickerOptions() {
+  const supabase = await createClient();
+  const [companies, products, topics] = await Promise.all([
+    supabase.from("companies").select("id, name").order("name").limit(500),
+    supabase.from("products").select("id, name").order("name").limit(500),
+    supabase.from("topics").select("id, name").eq("active", true).order("name"),
+  ]);
+  return { companies: companies.data ?? [], products: products.data ?? [], topics: topics.data ?? [] };
+}
+
+// ---- Product Detail --------------------------------------------------------
+export async function getProduct(id: string) {
+  const supabase = await createClient();
+  const { data: product } = await supabase
+    .from("products")
+    .select("*, companies(id, name), product_categories(name)")
+    .eq("id", id)
+    .single();
+  if (!product) return null;
+
+  const [pricing, features, ptopics] = await Promise.all([
+    supabase.from("pricing_history").select("*").eq("product_id", id).order("observed_at", { ascending: false }),
+    supabase.from("product_features").select("feature_name, feature_value").eq("product_id", id),
+    supabase.from("product_topics").select("topics(name)").eq("product_id", id),
+  ]);
+
+  let source: any = null;
+  if ((product as any).product_url) {
+    const { data: cs } = await supabase
+      .from("company_sources")
+      .select("status, last_error, last_checked_at")
+      .eq("company_id", (product as any).company_id)
+      .eq("url", (product as any).product_url)
+      .maybeSingle();
+    source = cs;
+  }
+
+  return {
+    product,
+    pricing: pricing.data ?? [],
+    features: features.data ?? [],
+    topics: (ptopics.data ?? []).map((t: any) => t.topics?.name).filter(Boolean),
+    source,
+  };
+}

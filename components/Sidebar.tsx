@@ -10,7 +10,7 @@ const NAV = [
   { href: "/pricing", label: "Pricing" },
   { href: "/activity", label: "Activity" },
   { href: "/news", label: "Product News" },
-  { href: "/watchlists", label: "Watchlists", soon: true },
+  { href: "/watchlists", label: "Watchlists" },
   { href: "/ask", label: "Ask Intelligence" },
   { href: "/review", label: "Review Queue", review: true },
   { href: "/admin", label: "Admin", admin: true },
@@ -28,7 +28,7 @@ export function Sidebar({ role }: { role?: string }) {
         if (item.review && !canReview) return null;
         if ((item as any).admin && !canAdmin) return null;
         const active = path === item.href || path.startsWith(item.href + "/");
-        const disabled = !!item.soon;
+        const disabled = !!(item as any).soon;
         return (
           <Link
             key={item.href}
@@ -39,7 +39,7 @@ export function Sidebar({ role }: { role?: string }) {
             } ${disabled ? "pointer-events-none opacity-40" : ""}`}
           >
             {item.label}
-            {item.soon && <span className="text-[10px] uppercase tracking-wide">soon</span>}
+            {(item as any).soon && <span className="text-[10px] uppercase tracking-wide">soon</span>}
           </Link>
         );
       })}
