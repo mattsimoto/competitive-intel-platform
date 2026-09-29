@@ -43,3 +43,33 @@ export async function addTaxonomy(formData: FormData) {
   await supabase.from(table).insert({ organization_id: orgId, name });
   revalidatePath("/admin");
 }
+
+const CHANGE_TYPES = [
+  "product_launch", "product_removal", "pricing_change", "feature_change",
+  "topic_expansion", "event_launch", "audience_change", "customer_announcement",
+  "partnership", "acquisition", "geographic_expansion", "rebrand",
+  "positioning_change", "research_launch",
+];
+
+export async function saveAutoApproval(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: profile } = await supabase.from("users").select("organization_id, role").eq("id", user!.id).maybeSingle();
+  const orgId = (profile as any)?.organization_id;
+  if (!orgId || (profile as any)?.role !== "administrator") return;
+
+  const enabled = formData.get("enabled") === "on";
+  const pricingAlways = formData.get("pricing_always_review") === "on";
+  const minConfidence = Number(formData.get("min_confidence") ?? 85);
+  const eligible = CHANGE_TYPES.filter((t) => formData.get(`ct_${t}`) === "on");
+
+  await supabase.from("auto_approval_settings").upsert({
+    organization_id: orgId,
+    enabled,
+    min_confidence: minConfidence,
+    eligible_change_types: eligible,
+    pricing_always_review: pricingAlways,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: "organization_id" });
+  revalidatePath("/admin");
+}

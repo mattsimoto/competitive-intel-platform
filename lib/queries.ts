@@ -453,7 +453,7 @@ export async function listActivity(opts: { status?: string; changeType?: string 
 // ---- Admin -----------------------------------------------------------------
 export async function getAdminData() {
   const supabase = await createClient();
-  const [weights, users, cats, topics, ctypes, stypes, regions, internal] = await Promise.all([
+  const [weights, users, cats, topics, ctypes, stypes, regions, internal, autoApproval] = await Promise.all([
     supabase.from("scoring_weights").select("factor, weight, active").order("weight", { ascending: false }),
     supabase.from("users").select("id, email, full_name, role, active").order("email"),
     supabase.from("product_categories").select("id, name").order("name"),
@@ -462,6 +462,7 @@ export async function getAdminData() {
     supabase.from("source_types").select("id, name").order("name"),
     supabase.from("regions").select("id, name").order("name"),
     supabase.from("internal_products").select("id, name").order("name"),
+    supabase.from("auto_approval_settings").select("*").maybeSingle(),
   ]);
   return {
     weights: weights.data ?? [],
@@ -474,6 +475,7 @@ export async function getAdminData() {
       regions: regions.data ?? [],
       internal_products: internal.data ?? [],
     },
+    autoApproval: (autoApproval.data as any) ?? null,
   };
 }
 
