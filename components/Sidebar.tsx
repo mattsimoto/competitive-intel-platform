@@ -9,6 +9,7 @@ const NAV = [
   { href: "/topics", label: "Markets & Topics" },
   { href: "/pricing", label: "Pricing" },
   { href: "/activity", label: "Activity" },
+  { href: "/news", label: "Product News" },
   { href: "/watchlists", label: "Watchlists", soon: true },
   { href: "/ask", label: "Ask Intelligence" },
   { href: "/review", label: "Review Queue", review: true },

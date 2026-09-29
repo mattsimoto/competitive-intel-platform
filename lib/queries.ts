@@ -571,3 +571,29 @@ export async function askIntelligence(q: string): Promise<AskResult> {
   }
   return { intent: "none", summary: "I couldn't map that to the structured data. Try one of the examples below — free-form questions unlock when the AI key is added.", records: [] };
 }
+
+// ---- Product News ----------------------------------------------------------
+export interface BriefRow {
+  id: string;
+  title: string;
+  kind: string;
+  period_label: string | null;
+  generated_at: string;
+  source_count: number | null;
+}
+
+export async function listBriefs(): Promise<BriefRow[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("market_briefs")
+    .select("id, title, kind, period_label, generated_at, source_count")
+    .order("generated_at", { ascending: false })
+    .limit(100);
+  return (data ?? []) as BriefRow[];
+}
+
+export async function getBrief(id: string) {
+  const supabase = await createClient();
+  const { data } = await supabase.from("market_briefs").select("*").eq("id", id).single();
+  return data ?? null;
+}
