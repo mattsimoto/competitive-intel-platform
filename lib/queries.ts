@@ -104,7 +104,7 @@ export async function getCompanyProfile(id: string) {
     .single();
   if (!company) return null;
 
-  const [products, rels, topics, customers, obs, scoreRes, sourcesRes] = await Promise.all([
+  const [products, rels, topics, customers, obs, scoreRes, sourcesRes, sourceTypesRes] = await Promise.all([
     supabase.from("products").select("*").eq("company_id", id).order("name"),
     supabase
       .from("competitive_relationships")
@@ -126,9 +126,10 @@ export async function getCompanyProfile(id: string) {
       .maybeSingle(),
     supabase
       .from("company_sources")
-      .select("id, name, url, priority, status, last_checked_at, last_changed_at, last_error, content_hash, source_types(name)")
+      .select("id, name, url, priority, active, status, last_checked_at, last_changed_at, last_error, content_hash, source_type_id, source_types(name)")
       .eq("company_id", id)
       .order("priority", { ascending: true }),
+    supabase.from("source_types").select("id, name").order("name"),
   ]);
 
   const productIds = (products.data ?? []).map((p: any) => p.id);
@@ -161,13 +162,16 @@ export async function getCompanyProfile(id: string) {
       name: s.name,
       url: s.url,
       priority: s.priority,
+      active: s.active,
       status: s.status,
       last_checked_at: s.last_checked_at,
       last_changed_at: s.last_changed_at,
       last_error: s.last_error,
       hasSnapshot: !!s.content_hash,
+      sourceTypeId: s.source_type_id,
       type: s.source_types?.name ?? null,
     })),
+    sourceTypes: (sourceTypesRes.data ?? []) as { id: string; name: string }[],
   };
 }
 

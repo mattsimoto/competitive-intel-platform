@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCompanyProfile } from "@/lib/queries";
+import { createClient } from "@/lib/supabase/server";
 import { ScoreBadge, ConfidenceBadge, StatusChip, Pill } from "@/components/badges";
 import { ScoreBreakdown } from "@/components/ScoreBreakdown";
+import { addSource, updateSource, deleteSource, recrawlSource } from "./actions";
 import { money, since } from "@/lib/format";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -18,7 +20,12 @@ export default async function CompetitorProfile({ params }: { params: Promise<{ 
   const { id } = await params;
   const data = await getCompanyProfile(id);
   if (!data) notFound();
-  const { company, products, areas, relationships, topics, customers, strengths, weaknesses, score, sources } = data;
+  const { company, products, areas, relationships, topics, customers, strengths, weaknesses, score, sources, sourceTypes } = data;
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: profile } = await supabase.from("users").select("role").eq("id", user!.id).maybeSingle();
+  const canEdit = ["administrator", "analyst"].includes((profile as any)?.role);
 
   return (
     <div className="space-y-5">
@@ -182,48 +189,81 @@ export default async function CompetitorProfile({ params }: { params: Promise<{ 
 
       {/* Sources */}
       <Section title={`Sources (${sources.length})`}>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-zinc-200 text-left text-xs uppercase tracking-wide text-zinc-500">
-                <th className="px-2 py-2 font-medium">Source</th>
-                <th className="px-2 py-2 font-medium">Type</th>
-                <th className="px-2 py-2 font-medium">Status</th>
-                <th className="px-2 py-2 font-medium">Last Checked</th>
-                <th className="px-2 py-2 font-medium">Last Changed</th>
-                <th className="px-2 py-2 font-medium">Priority</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sources.map((s: any) => {
-                const tone = s.status === "ok" ? "green" : s.status === "error" ? "red" : "gray";
-                const statusLabel = s.status === "never_run" ? "Never run" : s.status.replace(/\b\w/, (c: string) => c.toUpperCase());
-                return (
-                  <tr key={s.id} className="border-b border-zinc-100 align-top">
-                    <td className="px-2 py-2">
-                      <a href={s.url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline break-all">{s.name ?? s.url}</a>
-                      {s.status === "error" && s.last_error && (
-                        <div className="mt-0.5 text-xs text-red-600">{s.last_error}</div>
-                      )}
-                    </td>
-                    <td className="px-2 py-2">{s.type ? <Pill>{s.type}</Pill> : <span className="text-zinc-400">—</span>}</td>
-                    <td className="px-2 py-2">
-                      <Pill tone={tone}>{statusLabel}</Pill>
-                      {s.hasSnapshot && <span className="ml-1 text-xs text-zinc-400">· snapshot</span>}
-                    </td>
-                    <td className="px-2 py-2 whitespace-nowrap text-zinc-500">{since(s.last_checked_at)}</td>
-                    <td className="px-2 py-2 whitespace-nowrap text-zinc-500">{since(s.last_changed_at)}</td>
-                    <td className="px-2 py-2 tabular-nums text-zinc-500">{s.priority}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          {sources.length === 0 && <p className="py-4 text-sm text-zinc-400">No monitored sources.</p>}
+        <div className="space-y-2">
+          {sources.map((s: any) => {
+            const tone = s.status === "ok" ? "green" : s.status === "error" ? "red" : "gray";
+            const statusLabel = s.status === "never_run" ? "Never run" : s.status.replace(/\b\w/, (c: string) => c.toUpperCase());
+            return (
+              <div key={s.id} className="rounded-lg border border-zinc-200 p-3">
+                {canEdit ? (
+                  <>
+                    <form action={updateSource} className="space-y-2">
+                      <input type="hidden" name="id" value={s.id} />
+                      <input type="hidden" name="companyId" value={company.id} />
+                      <input
+                        type="url" name="url" defaultValue={s.url}
+                        className="w-full rounded-md border border-zinc-300 px-2 py-1 text-sm outline-none focus:border-zinc-900"
+                      />
+                      <div className="flex flex-wrap items-center gap-3 text-sm">
+                        {s.type && <Pill>{s.type}</Pill>}
+                        <Pill tone={tone}>{statusLabel}</Pill>
+                        <label className="flex items-center gap-1 text-zinc-600">
+                          Priority
+                          <input type="number" name="priority" defaultValue={s.priority} min={1} max={9}
+                            className="w-14 rounded-md border border-zinc-300 px-2 py-0.5" />
+                        </label>
+                        <label className="flex items-center gap-1 text-zinc-600">
+                          <input type="checkbox" name="active" defaultChecked={s.active} /> Active
+                        </label>
+                        <span className="text-xs text-zinc-400">checked {since(s.last_checked_at)}</span>
+                        <button className="rounded-md bg-zinc-900 px-3 py-1 text-xs font-medium text-white hover:bg-zinc-800">Save</button>
+                      </div>
+                      {s.status === "error" && s.last_error && <div className="text-xs text-red-600">{s.last_error}</div>}
+                    </form>
+                    <div className="mt-2 flex gap-2">
+                      <form action={recrawlSource}>
+                        <input type="hidden" name="id" value={s.id} />
+                        <input type="hidden" name="companyId" value={company.id} />
+                        <button className="rounded-md border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50">Re-crawl</button>
+                      </form>
+                      <form action={deleteSource}>
+                        <input type="hidden" name="id" value={s.id} />
+                        <input type="hidden" name="companyId" value={company.id} />
+                        <button className="rounded-md border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-50">Delete</button>
+                      </form>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-wrap items-center gap-3 text-sm">
+                    <a href={s.url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline break-all">{s.name ?? s.url}</a>
+                    {s.type && <Pill>{s.type}</Pill>}
+                    <Pill tone={tone}>{statusLabel}</Pill>
+                    <span className="text-xs text-zinc-400">checked {since(s.last_checked_at)}</span>
+                    {s.status === "error" && s.last_error && <span className="text-xs text-red-600">{s.last_error}</span>}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          {sources.length === 0 && <p className="py-2 text-sm text-zinc-400">No monitored sources.</p>}
         </div>
+
+        {canEdit && (
+          <form action={addSource} className="mt-4 flex flex-wrap items-center gap-2 border-t border-zinc-200 pt-4">
+            <input type="hidden" name="companyId" value={company.id} />
+            <input type="url" name="url" required placeholder="https://competitor.com/pricing"
+              className="min-w-[16rem] flex-1 rounded-md border border-zinc-300 px-2 py-1 text-sm outline-none focus:border-zinc-900" />
+            <select name="source_type_id" className="rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm">
+              <option value="">Type…</option>
+              {sourceTypes.map((t: any) => <option key={t.id} value={t.id}>{t.name}</option>)}
+            </select>
+            <button className="rounded-md border border-zinc-300 px-3 py-1 text-sm hover:bg-zinc-50">Add source</button>
+          </form>
+        )}
+
         <p className="mt-3 text-xs text-zinc-400">
-          Sources are crawled daily by the ingestion pipeline. “Snapshot” means the latest fetched
-          content is stored. Errors (dead links, bot-blocked, or JS-only pages) are shown inline.
+          Fix a dead URL and Save to reset it for a clean re-crawl; “Re-crawl” forces a fresh fetch on the
+          next run; toggle Active to stop crawling one. Changes take effect on the next pipeline run.
         </p>
       </Section>
 
