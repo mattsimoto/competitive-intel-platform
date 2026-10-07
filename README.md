@@ -145,8 +145,3 @@ npm run test:schema
 - Plain HTTP crawling may not retrieve useful content from JavaScript-heavy or blocked websites.
 - Calendar estimates, dates, and imported findings remain subject to their recorded verification status.
 
-## Project story and repository metadata
-
-The [anonymized case study](docs/case-study.md) explains the product strategy, privacy model, event research workflow, and independent distribution. Its metric describes delivered calendar coverage, not an unmeasured revenue, adoption, or time-saving result.
-
-The intended GitHub About description and suggested topics are recorded in [.github/ABOUT.md](.github/ABOUT.md).
