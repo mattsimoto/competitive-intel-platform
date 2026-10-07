@@ -13,7 +13,7 @@ The project includes a deployed private team workspace and a separate, data-free
 | Access | Active membership, role permissions, and database row-level security | The same membership controls, connected to a separate database |
 | Branding | Branded workspace identity | Configurable application and workspace names |
 | Infrastructure | Existing private deployment and database | Operator's own machine, network, or hosting environment |
-| Administration | Administrators manage CRA membership | Operator manages their own installation; the author has no automatic access |
+| Administration | Administrators manage membership | Operator manages their own installation; the author has no automatic access |
 
 **White label means reusing the software and adapting its identity and configuration.** It does not grant another organization access to any other's workspace. Each independent installation uses its own database and credentials; there is no shared author-controlled account or cross-installation data synchronization.
 
@@ -34,7 +34,7 @@ This repository is private and contains installation-specific calendar and organ
 
 ## Private workspace access
 
-Open **Admin → Users** as an active administrator to invite a CRA teammate. Choose their exact email address and role, create the link, and share it with that person. The administrator panel creates a shareable link; it does not send an invitation email on your behalf.
+Open **Admin → Users** as an active administrator to invite a teammate. Choose their exact email address and role, create the link, and share it with that person. The administrator panel creates a shareable link; it does not send an invitation email on your behalf.
 
 Invitations expire after seven days, can be revoked, and can be accepted once. Only the intended email address can accept. The teammate creates or signs into an individual account, verifies their email through Supabase Auth, reopens the original invitation link, and accepts it.
 
