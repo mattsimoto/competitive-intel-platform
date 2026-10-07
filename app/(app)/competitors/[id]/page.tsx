@@ -6,6 +6,9 @@ import { ScoreBadge, ConfidenceBadge, StatusChip, Pill } from "@/components/badg
 import { ScoreBreakdown } from "@/components/ScoreBreakdown";
 import { addSource, updateSource, deleteSource, recrawlSource } from "./actions";
 import { money, since } from "@/lib/format";
+import { EnrichPanel } from "./EnrichPanel";
+
+export const maxDuration = 60;
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -68,6 +71,8 @@ export default async function CompetitorProfile({ params }: { params: Promise<{ 
           </div>
         </div>
       </div>
+
+      <EnrichPanel companyId={company.id} canEdit={canEdit} configured={!!process.env.GROQ_API_KEY} />
 
       {/* Score breakdown */}
       <Section title="Score Breakdown">

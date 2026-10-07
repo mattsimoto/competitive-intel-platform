@@ -44,7 +44,7 @@ function Card({ item, canReview }: { item: ReviewItem; canReview: boolean }) {
           ) : (
             <span className="font-medium">Unknown company</span>
           )}
-          <Pill tone="blue">{item.change_type.replace(/_/g, " ")}</Pill>
+          <Pill tone="blue">{item.new_value_json?.kind === "company_enrichment" ? `Source enrichment · ${item.new_value_json.field}` : item.change_type.replace(/_/g, " ")}</Pill>
           <Pill tone="amber">sig {item.significance_score == null ? "—" : Math.round(item.significance_score)}</Pill>
           <Pill tone="gray">conf {item.confidence_score == null ? "—" : Math.round(item.confidence_score)}</Pill>
         </div>

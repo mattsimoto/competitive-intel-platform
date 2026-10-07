@@ -116,7 +116,8 @@ export async function getCompanyProfile(id: string) {
       .from("observations")
       .select("field_name, supporting_text")
       .eq("company_id", id)
-      .eq("observation_type", "positioning"),
+      .eq("observation_type", "positioning")
+      .in("review_status", ["approved", "auto_approved"]),
     supabase
       .from("competitive_scores")
       .select("total_score, explanation_json, calculated_at")

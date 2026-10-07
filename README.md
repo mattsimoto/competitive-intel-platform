@@ -194,6 +194,27 @@ crawl API or headless browser is the upgrade), and no auto-approval yet.
 
 ## Design notes
 
+### On-demand competitor enrichment
+
+In **Competitors**, open a company profile and click **Enrich now (AI)** below
+the profile header. Administrator or Analyst access is required. The button reads
+up to three active sources, saves dated evidence, and sends source text to Groq.
+Only findings with supporting quotes present in those pages enter the Review
+Queue. Repeated findings already recorded or awaiting review are skipped.
+
+Set `GROQ_API_KEY` in the Vercel project's production environment, then redeploy.
+Optional `GROQ_MODEL` defaults to `openai/gpt-oss-120b`. This is separate from the
+GitHub Actions secret. No database migration or service-role key is needed for
+the web app; writes use the signed-in user's session and existing RLS policies.
+
+The button shows progress, results, and actionable errors. Blocked or unreadable
+pages may need their URLs replaced in the Sources section. Findings always require
+human review: approving a description updates the Overview; approved positioning
+evidence appears under Strengths or Weaknesses. Other findings remain source-backed
+intelligence in Review/Activity; they do not automatically create product, pricing,
+topic, or customer records. Enrichment records current facts, not proof that a new
+launch or competitive change happened. The daily crawler continues independently.
+
 - **Multi-tenant by construction.** Every row carries `organization_id`; RLS keys
   on it so one organization can never read another's intelligence.
 - **Evidence spine.** `source_documents -> observations -> competitive_changes`
