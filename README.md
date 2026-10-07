@@ -6,16 +6,16 @@ The project includes a deployed private team workspace and a separate, data-free
 
 ## Two independent installation models
 
-| | Private CRA workspace | Independent white-label edition |
+| | Private workspace | Independent white-label edition |
 | --- | --- | --- |
-| Data | CRA research and internal portfolio | Starts without CRA records; operator imports their own data |
-| Users | Individually invited CRA teammates sharing the CRA workspace | Accounts and invitations controlled by that installation's operator |
+| Data | Research and internal portfolio | Starts without records; operator imports their own data |
+| Users | Individually invited teammates sharing the workspace | Accounts and invitations controlled by that installation's operator |
 | Access | Active membership, role permissions, and database row-level security | The same membership controls, connected to a separate database |
-| Branding | CRA workspace identity | Configurable application and workspace names |
+| Branding | Branded workspace identity | Configurable application and workspace names |
 | Infrastructure | Existing private deployment and database | Operator's own machine, network, or hosting environment |
-| Administration | CRA administrators manage CRA membership | Operator manages their own installation; the author has no automatic access |
+| Administration | Administrators manage CRA membership | Operator manages their own installation; the author has no automatic access |
 
-**White label means reusing the software and adapting its identity and configuration.** It does not grant another organization access to CRA's workspace. Each independent installation uses its own database and credentials; there is no shared author-controlled account or cross-installation data synchronization.
+**White label means reusing the software and adapting its identity and configuration.** It does not grant another organization access to any other's workspace. Each independent installation uses its own database and credentials; there is no shared author-controlled account or cross-installation data synchronization.
 
 This repository is private and contains installation-specific calendar and organizer files. Distribute only the clean package generated below. The clean distribution includes reusable application code and setup documentation; private research and credentials are excluded.
 
