@@ -1,285 +1,152 @@
-## Workspace access and independent edition
-
-Admin → Users now creates expiring, email-specific invitations, manages active membership and roles, and shows access history. Teammates share the organization's records using separate accounts. Auth account creation alone grants no data. Invitation acceptance requires email-link verification. Configure SMTP and the `/auth/callback` redirect for the application's origin before onboarding teammates.
-
-The independent edition is built using `python scripts/self-hosted/package.py --out white-label.zip`. Its allowlist omits the private calendar, organizer manifests, database assertions tied to private records, environment files and Git history. It starts with its own database and supports configurable branding and CSV imports. See [SELF-HOSTED.md](SELF-HOSTED.md). Do not distribute this private repository or its calendar files as the clean edition.
-
 # Competitive Intelligence Platform
 
-## Industry Events
+A white-label competitive intelligence application for product marketing, competitive research, sales enablement, and go-to-market planning. It connects companies, individual offerings, prices, events, and market findings to their sources, review status, and competitive relationships.
 
-The **Industry Events** navigation item provides a searchable 2027 calendar in
-list and month views, with region, date-status, CRA-portfolio, organizer-evidence,
-and competition-review filters, same-country date-overlap signals, and CSV export.
-Event details preserve the workbook's attendance estimate basis, pricing text,
-source URLs, author-supplied verification date, and original row number.
+The project includes a deployed private team workspace and a separate, data-free self-hosted edition. The reusable application can be configured under another organization's name, with that organization's own database, users, research, portfolio, and credentials.
 
-The calendar contains 126 occurrences: 92 external events with documented
-organizers and first-class competitor products, 15 CRA internal events, and 19
-unresolved organizers. Ownership evidence is separate from the workbook's date
-status. Internal events never create competitor companies, products, or matches.
-Co-organizers and operating entities are documented in ownership notes; supported
-parent companies are linked through the existing company hierarchy. Independent
-BSides chapters are not assumed to have one corporate owner. Legacy event-brand
-company imports are preserved without destructive merges.
+## Two independent installation models
 
-Six named CRA offerings are available for comparison: Cybersecurity Summit,
-CyberRisk Collaborative, Identiverse, InfoSec World, MSSP Alert Live, and ChannelPro
-events. The initial 182 comparisons are **proposals**, based on event focus.
-An Analyst or Administrator can document an unresolved organizer using an existing
-or new company and an official evidence URL. The atomic action creates its event
-product, source link, and audit record. Approved comparisons create active
-product-level competitive relationships and recalculate the organizer's score;
-rejection removes that relationship from active scoring. Other CRA offerings can
-be added to an event using its comparison picker. No artificial attendance or
-pricing numbers are generated from the imported ranges or historical examples.
+| | Private CRA workspace | Independent white-label edition |
+| --- | --- | --- |
+| Data | CRA research and internal portfolio | Starts without CRA records; operator imports their own data |
+| Users | Individually invited CRA teammates sharing the CRA workspace | Accounts and invitations controlled by that installation's operator |
+| Access | Active membership, role permissions, and database row-level security | The same membership controls, connected to a separate database |
+| Branding | CRA workspace identity | Configurable application and workspace names |
+| Infrastructure | Existing private deployment and database | Operator's own machine, network, or hosting environment |
+| Administration | CRA administrators manage CRA membership | Operator manages their own installation; the author has no automatic access |
 
-Deployment / import:
+**White label means reusing the software and adapting its identity and configuration.** It does not grant another organization access to CRA's workspace. Each independent installation uses its own database and credentials; there is no shared author-controlled account or cross-installation data synchronization.
 
-1. Apply `supabase/migrations/20261007131632_industry_events.sql` and the category
-   compatibility migration `20261007133000_event_product_category.sql`.
-2. Generate SQL using
-   `python scripts/events/generate_import.py --org <organization uuid>` and apply
-   it to the intended organization. Repeating it skips existing event rows and
-   preserves analyst reviews, products, and evidence.
-3. The preserved input is `scripts/events/calendar-2027.json`; researched owner
-   mappings and explicit unresolved rows are in `scripts/events/organizers-2027.json`.
+This repository is private and contains installation-specific calendar and organizer files. Distribute only the clean package generated below. The clean distribution includes reusable application code and setup documentation; private research and credentials are excluded.
 
-Validation: `node tests/events/events.test.cjs`, `npm run build`, and the rollback-only
-integration assertions in `tests/events/database.sql` through Supabase. The latter
-exercise owner resolution, approval/rejection, duplicate protection, role/tenant
-permissions, internal-event exclusion, and review audit history without retaining
-test changes. These tests do not replace a signed-in production browser check.
+## Built capabilities
 
-A continuously updated competitive-intelligence system: it tracks competitors at
-the offering level, monitors public sources, routes AI-detected changes through
-human review, preserves history, and scores competitors transparently.
+- Dashboard, competitor profiles, product views, pricing, markets and topics, activity, and watchlists.
+- Product-level relationships with an internal portfolio and configurable competitive scoring.
+- CSV import with templates and preview for companies, products, and industry events.
+- Interactive event calendar with list/month views, filters, CSV export, organizer evidence, product links, portfolio comparisons, and date-overlap signals.
+- Source monitoring, retrieved-page snapshots, content hashing, and change detection.
+- On-demand AI enrichment with source-linked findings and review status.
+- Review Queue with approval, rejection, deferral, duplicate handling, and audit records.
+- Ask Intelligence and Product News views, with optional provider-backed analysis.
+- Administrator, Analyst, and Viewer roles, invitation links, membership activation controls, and access history.
+- PostgreSQL migrations, application deployment configuration, bootstrap tooling, and self-hosting documentation.
 
-This repository is the **Sprint 1 data foundation** — the PostgreSQL schema and
-the seed-spreadsheet importer. The Next.js web app, crawler worker, and AI
-pipeline are later sprints (see the architecture & build-plan doc).
+## Private workspace access
 
-## What's here
+Open **Admin → Users** as an active administrator to invite a CRA teammate. Choose their exact email address and role, create the link, and share it with that person. The administrator panel creates a shareable link; it does not send an invitation email on your behalf.
 
-```
-supabase/
-  migrations/
-    0001_init_schema.sql     26 tables, enums, indexes, full-text search
-    0002_rls_policies.sql    row-level security: org isolation + role gates
-    0003_triggers.sql        updated_at, tsvector, weight-total guard, per-org seed
-scripts/
-  import/
-    importSpreadsheet.ts     workbook importer (dedup, mapping, dry-run + load)
-    lib/normalize.ts         name/domain/price/customer parsing
-    lib/mapping.ts           sheet + "competes with" -> internal portfolio
-```
+Invitations expire after seven days, can be revoked, and can be accepted once. Only the intended email address can accept. The teammate creates or signs into an individual account, verifies their email through Supabase Auth, reopens the original invitation link, and accepts it.
 
-All three migrations have been applied end-to-end against PostgreSQL 16, and the
-importer has been dry-run against the real seed workbook (202 rows -> 190 unique
-companies, with cross-sheet duplicates merged and messy data flagged).
+Creating an Auth account alone grants no intelligence data. Workspace membership comes from the checked invitation process. Membership roles are controlled in the database, not through client-supplied account metadata.
 
-## Prerequisites
+| Role | Access |
+| --- | --- |
+| Viewer | Read workspace intelligence and manage permitted personal watchlists |
+| Analyst | Viewer access plus data imports, edits, enrichment, and intelligence/event review |
+| Administrator | Analyst access plus membership, taxonomy, scoring, and configuration controls |
 
-- A Supabase project (Postgres + Auth). Get its URL and keys from the dashboard.
-- Node.js 20+.
-- The Supabase CLI (`npm i -g supabase`) for applying migrations.
+Administrators can change a teammate's role, deactivate access, or reactivate an existing member. Deactivation removes further workspace database access, including access through existing sessions. It cannot erase information a person already downloaded. An administrator cannot demote or deactivate their own account through this screen, and the workspace must retain an active administrator.
 
-## 1. Apply the schema
+Before onboarding teammates, verify real email delivery and configure the Auth site URL and allowed callback URL for the application origin (`/auth/callback`). The implementation and database checks have passed; a real mailbox/callback onboarding test remains outstanding.
 
-```bash
-supabase link --project-ref <your-project-ref>
-supabase db push          # runs the three migrations in order
-```
+## Importing and maintaining intelligence
 
-The migrations reference `auth.users` and `auth.uid()`, which Supabase provides.
-Creating an `organizations` row automatically seeds that org's taxonomy
-(company types, categories, topics, source types, regions) and its default
-scoring weights (which must always total 100 — enforced by a deferred trigger).
+Use **Import Data** to download the CSV template for companies, products, or events. Replace the example rows with your own records and preview the file before committing the import.
 
-## 2. Import the seed spreadsheet
+- Import companies before their products; products refer to their company's name.
+- Each import accepts 1–500 records in a file smaller than 1 MB.
+- Duplicate companies/products reject the import. Any invalid row rolls back the complete batch.
+- Imported companies/products begin as pending-review intelligence.
+- Imported events begin with unresolved organizers. An import cannot assert verified ownership or approve a competitive relationship.
+- Add your own internal portfolio offerings and taxonomy in Admin.
 
-### Option A — no local tooling (paste SQL)
+### Events and organizer ownership
 
-If you can't run Node/npm, a pre-generated seed is provided at
-`supabase/seed/seed_data.sql`. After the three migrations, open a new SQL Editor
-query, paste the whole file, and Run. It creates the organization (firing the
-taxonomy + weights seed) and loads ~190 companies, products, pricing,
-relationships, customers, and evidence notes — all at confidence 60 /
-pending_review. Regenerate it from a fresh workbook with:
+An event brand is not automatically its organizing company. Event records preserve imported dates, attendance/pricing text, provenance, and verification status separately from ownership evidence and competitive judgments.
 
-```bash
-cd scripts/import && npm install
-npm run emit:sql -- --file /path/to/Competitive_Intel_for_CRA.xlsx \
-  --out ../../supabase/seed/seed_data.sql --org-slug your-org --org-name "Your Org"
+An Analyst or Administrator can document an unresolved organizer using an existing or new company, an official evidence URL, and an explanation. The action creates the linked event product, source, and review record atomically. Verified external events connect to their organizer's company and product records.
+
+Internal events belong to the organization's own portfolio and are excluded from competitor products and relationships. Proposed event-to-portfolio comparisons affect competitive relationships and scoring only after approval. Rejection removes the associated relationship from active scoring. Same-country date overlaps are planning signals, not proof that events compete.
+
+The private calendar import remains in `scripts/events/calendar-2027.json` and `scripts/events/organizers-2027.json`. Its installation-specific import tool is `scripts/events/generate_import.py`. These files are excluded from the independent edition.
+
+## AI, monitoring, and review
+
+**On-demand enrichment:** open a competitor profile and select **Enrich now (AI)**. An Analyst or Administrator can retrieve up to three active sources and request findings through Groq. The app checks supporting quotes against retrieved text and routes findings to review; it does not automatically approve them or treat a current fact as proof of a new launch.
+
+**Crawler:** `scripts/ingest/` retrieves active monitored sources, cleans and hashes pages, stores changed snapshots, and optionally classifies/extracts findings. Unchanged pages do not invoke AI. The private GitHub workflow runs daily at 08:00 UTC in crawl-only mode by default and supports manual full runs. The clean edition's workflow is manual-only.
+
+**Auto-approval:** crawler findings are pending by default. Administrators can explicitly enable rules for eligible change types and confidence thresholds. Pricing can remain subject to review. These settings do not auto-approve on-demand enrichment or event-portfolio comparisons.
+
+**Product News:** public feed retrieval can be disabled with `ENABLE_NEWS_FETCH=false`. Optional news synthesis uses Anthropic. AI requests transmit the selected source text or workspace context to the configured provider; operators decide whether to enable these features.
+
+| Variable | Purpose | Where it belongs |
+| --- | --- | --- |
+| `NEXT_PUBLIC_APP_NAME` | Application name | App build environment |
+| `NEXT_PUBLIC_SUPABASE_URL` | This installation's Supabase API URL | App build/server environment |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Publishable/anon key; data access remains subject to Auth and RLS | App build/server environment |
+| `GROQ_API_KEY` | Enrichment, Ask Intelligence, and optional crawler AI | Server environment; crawler secret if enabled there |
+| `GROQ_MODEL` | Optional Groq model override | Server/worker environment |
+| `ANTHROPIC_API_KEY` | Optional news synthesis | Server environment |
+| `ENABLE_NEWS_FETCH` | Set to `false` to disable public news retrieval | Server environment |
+| `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | First-install bootstrap and crawler access to the operator's database | Private bootstrap environment or worker secrets only |
+
+Never put a service-role key or AI provider key into a `NEXT_PUBLIC_` variable or a downloadable package. The web app uses the signed-in user's session and RLS for workspace operations; it does not need a service-role key. Worker credentials bypass RLS and belong only to the operator's trusted server environment.
+
+## Build the independent edition
+
+From the private checkout:
+
+```sh
+python scripts/self-hosted/package.py --out competitive-intelligence-white-label.zip
 ```
 
-### Option B — run the importer (writes via the API)
+The exporter uses an explicit file allowlist and checks for known private-installation references and possible credentials. The clean package contains application code, migrations, generic CSV examples, bootstrap tooling, Docker configuration, and setup instructions. It excludes CRA calendar/organizer manifests, private data assertions, environment secrets, build output, and Git history. Its README is generated from `SELF-HOSTED.md`.
 
-```bash
-cd scripts/import
-npm install
+The software is free under the [MIT license](LICENSE). Each operator supplies their own hosting, database, email delivery, and optional AI keys. The application requires a server and database; it is not a standalone HTML file. Docker Compose starts the app only, not a complete Supabase stack.
 
-# Preview without writing anything:
-npm run import:dry -- --file /path/to/Competitive_Intel_for_CRA.xlsx
+Follow [SELF-HOSTED.md](SELF-HOSTED.md) for an independent installation on one machine, a private network, or hosted infrastructure. The bootstrap tool refuses a populated installation and creates the first administrator in the operator's empty database. Subsequent teammates use invitations.
 
-# Real load (service role bypasses RLS — server-side only, never in a browser):
-export SUPABASE_URL="https://<ref>.supabase.co"
-export SUPABASE_SERVICE_ROLE_KEY="<service-role-key>"
-npm run import -- --file /path/to/Competitive_Intel_for_CRA.xlsx \
-  --org-slug your-org --org-name "Your Organization"
+## Run the web application
+
+For a configured installation:
+
+```sh
+npm ci
+cp .env.example .env.local
+# Fill in this installation's database URL and publishable/anon key.
+npm run dev
 ```
 
-Every imported record lands at **confidence 60** and
-**intelligence_status = pending_review** ("Needs Verification"): the seed data
-was compiled in 2024 and must be re-verified before it is treated as current.
-The original sheet/row is preserved in `original_import_reference`
-(e.g. `Events!Row37`).
+For production:
 
-The importer:
-- merges the same company appearing on multiple sheets (by normalized name, then domain);
-- splits the portfolio cell into product records;
-- maps the free-text "competes with" column onto the internal portfolio, routing
-  unrecognized tokens to review instead of guessing;
-- keeps differentiators/weaknesses as evidence observations;
-- best-effort parses pricing, keeping the raw text at low confidence;
-- caps oversized customer lists (one cell holds ~244 unrelated names) rather than
-  creating junk rows;
-- skips the `Timeline` sheet and leaves the pivoted `Pricing Breakdown` sheet for
-  a later dedicated path.
-
-## 3. Push this to your GitHub
-
-```bash
-cd competitive-intel-platform
-git init && git add . && git commit -m "Sprint 1: schema + spreadsheet importer"
-
-# With the GitHub CLI (creates the repo under your account and pushes):
-gh repo create mattsimoto/competitive-intel-platform --private --source=. --remote=origin --push
-
-# Or manually, after creating an empty repo in the GitHub UI:
-git remote add origin https://github.com/mattsimoto/competitive-intel-platform.git
-git branch -M main && git push -u origin main
+```sh
+npm run build
+npm start
 ```
 
-## 4. Run the web app
+Apply the migration files in filename order when preparing a new Supabase database. Existing installations must use their own migration history; do not reset a populated database or load another organization's seed data. Independent setup, Auth configuration, initial administrator creation, and container networking are covered in `SELF-HOSTED.md`.
 
-The web app (Next.js App Router, TypeScript, Tailwind v4, Supabase SSR auth)
-lives at the repo root. It reads the data you loaded, enforcing RLS through the
-logged-in user's session. Sprint 1 ships auth, the app shell, the Dashboard,
-the Competitors list, and the Competitor profile.
+## Validation and limits
 
-### Create your first user
-
-The app authenticates against Supabase Auth, and RLS resolves a user's org from
-`public.users`. So create one auth user and one matching profile row:
-
-1. Dashboard → Authentication → Users → Add user (email + password, mark
-   confirmed).
-2. In the SQL Editor, link that auth user to your org as an administrator
-   (replace the email; the org was created by the seed):
-
-```sql
-insert into public.users (id, organization_id, email, full_name, role)
-select u.id, o.id, u.email, 'You', 'administrator'
-from auth.users u, organizations o
-where u.email = 'you@example.com' and o.slug = 'your-org';
+```sh
+npm run build
+npm run test:events
+npm run test:csv
+npm run test:schema
 ```
 
-### Deploy on Vercel (no local tooling)
+- Production build and event/CSV checks pass.
+- The schema/import test uses a fresh embedded PostgreSQL database with a simulated Auth schema. It checks imports, batch rollback, roles, cross-workspace isolation, and deactivation; it does not test the real Auth service.
+- `tests/membership/database.sql` contains rollback-only membership assertions for a prepared Supabase installation with an administrator.
+- `tests/events/database.sql` contains private-calendar assertions and is excluded from the clean edition.
+- Real invitation email delivery/callbacks and the Docker runtime still require an environment-specific check.
+- Plain HTTP crawling may not retrieve useful content from JavaScript-heavy or blocked websites.
+- Calendar estimates, dates, and imported findings remain subject to their recorded verification status.
 
-Because a Next.js app needs a build step, the simplest path — no npm on your
-machine — is to let Vercel build from GitHub:
+## Project story and repository metadata
 
-1. Push this repo to `github.com/mattsimoto` (see section 3).
-2. In Vercel, New Project → import the repo. Framework preset: Next.js.
-3. Add environment variables `NEXT_PUBLIC_SUPABASE_URL` and
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY` (the publishable/anon key — safe in the
-   browser; RLS protects the data).
-4. Deploy. Vercel builds in the cloud and gives you a URL. Sign in with the user
-   from above.
+The [anonymized case study](docs/case-study.md) explains the product strategy, privacy model, event research workflow, and independent distribution. Its metric describes delivered calendar coverage, not an unmeasured revenue, adoption, or time-saving result.
 
-### Or run locally (if you can install dependencies)
-
-```bash
-cp .env.local.example .env.local   # fill in URL + anon key
-npm install
-npm run dev                          # http://localhost:3000
-```
-
-This project's production build has been verified with `next build`.
-
-## 5. Ingestion pipeline (daily crawl + AI)
-
-The pipeline (`scripts/ingest/`) runs as a scheduled GitHub Action
-(`.github/workflows/ingest.yml`) — no separate host. Each run: fetches due
-active sources, cleans HTML to text, hashes, and compares. Unchanged pages stop
-before any AI runs (the cost gate). Changed pages are stored, classified with
-Claude (relevance), and if relevant, extracted into an observation plus a
-**pending** `competitive_change` that appears in the Review Queue. Nothing is
-auto-approved in this version — a human verifies every detection.
-
-Setup:
-
-1. **Seed sources** (SQL Editor): run `supabase/migrations/0006_seed_sources.sql`,
-   then `select seed_company_sources();` (creates a Website source per company
-   and a Product Page source per product).
-2. **Add the files to GitHub:** upload `scripts/ingest/` (folder), and create
-   `.github/workflows/ingest.yml` (use Add file → Create new file and type that
-   path so the dot-folder is created correctly).
-3. **Add repo secrets** (Settings → Secrets and variables → Actions → New
-   repository secret): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`. Add
-   `ANTHROPIC_API_KEY` only when you want the AI half (full mode). The
-   service-role and AI keys live only in Actions, never in the browser.
-4. **Run it:** Actions tab → "Ingest competitive intelligence" → Run workflow.
-   The **mode** dropdown defaults to **crawl-only** (fetch, detect changes, store
-   snapshots — no AI, no key needed). Choose **full** only after adding
-   `ANTHROPIC_API_KEY`, to also classify + extract into the Review Queue. The
-   daily scheduled run is always crawl-only. The log prints
-   `{mode, checked, changed, unchanged, detections, errors}`.
-
-Tuning via the workflow env: `ANTHROPIC_MODEL` (default `claude-haiku-4-5-20251001`),
-`INGEST_MAX_SOURCES` (default 25 per run — raise once you've confirmed it works).
-
-Limits of v1: plain fetch only (JS-heavy pages won't yield text — a managed
-crawl API or headless browser is the upgrade), and no auto-approval yet.
-
-## Design notes
-
-### On-demand competitor enrichment
-
-In **Competitors**, open a company profile and click **Enrich now (AI)** below
-the profile header. Administrator or Analyst access is required. The button reads
-up to three active sources, saves dated evidence, and sends source text to Groq.
-Only findings with supporting quotes present in those pages enter the Review
-Queue. Repeated findings already recorded or awaiting review are skipped.
-
-Set `GROQ_API_KEY` in the Vercel project's production environment, then redeploy.
-Optional `GROQ_MODEL` defaults to `openai/gpt-oss-120b`. This is separate from the
-GitHub Actions secret. No database migration or service-role key is needed for
-the web app; writes use the signed-in user's session and existing RLS policies.
-
-The button shows progress, results, and actionable errors. Blocked or unreadable
-pages may need their URLs replaced in the Sources section. Findings always require
-human review: approving a description updates the Overview; approved positioning
-evidence appears under Strengths or Weaknesses. Other findings remain source-backed
-intelligence in Review/Activity; they do not automatically create product, pricing,
-topic, or customer records. Enrichment records current facts, not proof that a new
-launch or competitive change happened. The daily crawler continues independently.
-
-- **Multi-tenant by construction.** Every row carries `organization_id`; RLS keys
-  on it so one organization can never read another's intelligence.
-- **Evidence spine.** `source_documents -> observations -> competitive_changes`
-  keeps every material fact traceable to a source.
-- **History preserved.** `pricing_history` and `competitive_changes` are
-  append-only; nothing is silently overwritten.
-- **Deviation from the spec's Section 6:** taxonomy tables carry
-  `organization_id` (the spec omitted it) so RLS is uniform and each org edits its
-  own taxonomy. Noted in the architecture doc's open questions.
-
-## Not yet built (later sprints)
-
-Web app screens beyond the Sprint 1 slice (Products, Markets & Topics, Pricing,
-Activity, Watchlists, Ask Intelligence, Review Queue, Admin), plus the crawler
-worker, AI extraction, review workflow, and the scoring engine. Competitive
-scores read "Not yet scored" until that engine runs. These depend on decisions
-still open in the plan doc (worker host, AI provider, crawler approach).
+The intended GitHub About description and suggested topics are recorded in [.github/ABOUT.md](.github/ABOUT.md).

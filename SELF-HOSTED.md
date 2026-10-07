@@ -1,6 +1,12 @@
-# Independent white-label edition
+# Competitive Intelligence Platform — Independent White Label Edition
 
 This is free, reusable application source. Every installation has its own database, users, credentials, records and branding. There is no central account, owner backdoor, telemetry integration, or data synchronization to the author. This is a Next.js server application with a Supabase database and Auth; it is not a standalone HTML file. Optional AI sends selected records/source content to the operator's chosen provider when an operator invokes those features. Public news retrieval and crawls contact their source websites. Next.js framework telemetry can be disabled with `NEXT_TELEMETRY_DISABLED=1`.
+
+## What the application includes
+
+Company and product research, pricing views, configurable competitive scoring, source evidence, a Review Queue, watchlists, and an interactive event calendar. Teams use individual invited accounts to share their own workspace. CSV templates and import previews support their own company, product, and event records. Event ownership and proposed portfolio comparisons remain distinct from approved competitive relationships.
+
+Optional AI enrichment proposes source-linked findings for review. Crawling can run without AI. The source package includes no originating organization's records, user accounts, environment secrets, or Git history. Application naming uses `NEXT_PUBLIC_APP_NAME`; workspace naming is set during bootstrap. The software is free under the included MIT license. The operator controls hosting, database administration, backups, mail delivery, and optional provider accounts.
 
 ## Start on one machine
 
