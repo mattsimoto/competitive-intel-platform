@@ -33,8 +33,7 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-         GROQ_MODEL: openai/gpt-oss-120b
+          GROQ_MODEL: openai/gpt-oss-120b
           INGEST_MAX_SOURCES: "25"
-          # "full" only when manually chosen AND you've added ANTHROPIC_API_KEY; otherwise crawl-only.
           INGEST_NO_AI: ${{ (github.event.inputs.mode == 'full') && '0' || '1' }}
         run: npx tsx ingest.ts
