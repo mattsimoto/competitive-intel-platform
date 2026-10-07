@@ -1,3 +1,9 @@
+## Workspace access and independent edition
+
+Admin → Users now creates expiring, email-specific invitations, manages active membership and roles, and shows access history. Teammates share the organization's records using separate accounts. Auth account creation alone grants no data. Invitation acceptance requires email-link verification. Configure SMTP and the `/auth/callback` redirect for the application's origin before onboarding teammates.
+
+The independent edition is built using `python scripts/self-hosted/package.py --out white-label.zip`. Its allowlist omits the private calendar, organizer manifests, database assertions tied to private records, environment files and Git history. It starts with its own database and supports configurable branding and CSV imports. See [SELF-HOSTED.md](SELF-HOSTED.md). Do not distribute this private repository or its calendar files as the clean edition.
+
 # Competitive Intelligence Platform
 
 ## Industry Events

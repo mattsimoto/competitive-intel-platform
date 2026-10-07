@@ -1,3 +1,4 @@
+import { appName } from "@/lib/branding";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/components/Sidebar";
@@ -11,9 +12,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // The public.users row carries org + role; without it RLS returns no data.
   const { data: profile } = await supabase
     .from("users")
-    .select("full_name, role, organization_id, organizations(name)")
+    .select("full_name, role, active, organization_id, organizations(name)")
     .eq("id", user.id)
     .maybeSingle();
+
+  if (!profile || !profile.active) redirect("/access-denied");
 
   const orgName = (profile as any)?.organizations?.name ?? "Competitive Intelligence";
 
@@ -22,7 +25,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <aside className="w-60 shrink-0 border-r border-zinc-200 bg-white">
         <div className="px-4 py-4">
           <div className="text-sm font-semibold">{orgName}</div>
-          <div className="text-xs text-zinc-500">Competitive Intelligence</div>
+          <div className="text-xs text-zinc-500">{appName}</div>
         </div>
         <Sidebar role={(profile as any)?.role} />
       </aside>
@@ -34,14 +37,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </div>
           <SignOutButton />
         </header>
-        {!profile && (
-          <div className="border-b border-amber-200 bg-amber-50 px-6 py-2 text-sm text-amber-800">
-            No profile row found for your account. Add a row to <code>public.users</code> linking this
-            auth user to your organization (and set a role) so records become visible.
-          </div>
-        )}
         <main className="flex-1 p-6">{children}</main>
       </div>
     </div>
   );
 }
+

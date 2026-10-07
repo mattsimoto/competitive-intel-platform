@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:schema": "node tests/self-hosted/schema.mjs",
+    "test:csv": "node tests/self-hosted/csv.test.cjs",
+    "test:events": "node tests/events/events.test.cjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
@@ -18,6 +21,7 @@
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",

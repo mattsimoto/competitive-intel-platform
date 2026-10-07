@@ -13,6 +13,7 @@ const NAV = [
   { href: "/news", label: "Product News" },
   { href: "/watchlists", label: "Watchlists" },
   { href: "/ask", label: "Ask Intelligence" },
+  { href: "/import", label: "Import Data", review: true },
   { href: "/review", label: "Review Queue", review: true },
   { href: "/admin", label: "Admin", admin: true },
 ];

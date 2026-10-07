@@ -2,7 +2,7 @@ import "server-only";
 
 export async function groqJSON(system: string, user: string): Promise<unknown> {
   const key = process.env.GROQ_API_KEY;
-  if (!key) throw new Error("Add GROQ_API_KEY to the Vercel production environment, then redeploy.");
+  if (!key) throw new Error("Add GROQ_API_KEY to your server environment, then redeploy.");
   const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     cache: "no-store",
@@ -17,9 +17,9 @@ export async function groqJSON(system: string, user: string): Promise<unknown> {
     }),
   });
   if (!response.ok) {
-    if (response.status === 401) throw new Error("Groq rejected the API key. Check GROQ_API_KEY in Vercel and redeploy.");
+    if (response.status === 401) throw new Error("Groq rejected the API key. Check GROQ_API_KEY in the server environment and redeploy.");
     if (response.status === 429) throw new Error("Groq's usage limit was reached. Please try again later.");
-    if ([400, 404].includes(response.status)) throw new Error("Groq could not use the configured model. Check GROQ_MODEL in Vercel.");
+    if ([400, 404].includes(response.status)) throw new Error("Groq could not use the configured model. Check GROQ_MODEL in the server environment.");
     throw new Error(`Groq is unavailable (HTTP ${response.status}). Please try again later.`);
   }
   const body = await response.json();

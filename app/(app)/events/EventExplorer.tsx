@@ -8,7 +8,7 @@ const input = 'rounded-md border border-zinc-300 bg-white p-2 text-sm';
 export function EventExplorer({ events, portfolio }: { events: IndustryEvent[]; portfolio: { id: string; name: string }[] }) {
   const [filters, setFilters] = useState(empty);
   const [view, setView] = useState<'list' | 'calendar'>('list');
-  const [month, setMonth] = useState('2027-01');
+  const [month, setMonth] = useState(events.find(e => e.start_date)?.start_date?.slice(0,7) || new Date().toISOString().slice(0,7));
   const rows = filterEvents(events, { ...filters, month: view === 'calendar' ? month : filters.month });
   const regions = Array.from(new Set(events.map(e => e.region).filter((r): r is string => !!r))).sort();
   const set = (key: keyof EventFilters, value: string | boolean) => setFilters(f => ({ ...f, [key]: value }));
@@ -18,7 +18,7 @@ export function EventExplorer({ events, portfolio }: { events: IndustryEvent[]; 
   function download() {
     const blob = new Blob(['\uFEFF' + eventsCSV(rows)], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'industry-events-2027.csv'; a.click(); URL.revokeObjectURL(url);
+    const a = document.createElement('a'); a.href = url; a.download = 'industry-events.csv'; a.click(); URL.revokeObjectURL(url);
   }
   function card(e: IndustryEvent, compact = false) {
     const comparisons = e.event_portfolio_matches.filter(m => m.review_status !== 'rejected');
@@ -26,35 +26,35 @@ export function EventExplorer({ events, portfolio }: { events: IndustryEvent[]; 
     return <article key={e.id} className={`rounded-lg border p-3 ${e.scope === 'internal' ? 'border-blue-200 bg-blue-50' : 'border-zinc-200 bg-white'}`}>
       <Link href={`/events/${e.id}`} className="font-medium text-blue-700 hover:underline">{e.name}</Link>
       <p className="mt-1 text-xs text-zinc-600">{eventDate(e)} · {e.city || e.country || 'Location TBA'}</p>
-      <p className="mt-1 text-xs"><span className={isConfirmed(e) ? 'text-green-700' : 'text-amber-700'}>{e.date_status} (imported)</span> · {e.scope === 'internal' ? 'CRA event' : e.organizer_status === 'verified' ? 'Organizer documented' : 'Organizer review needed'}</p>
+      <p className="mt-1 text-xs"><span className={isConfirmed(e) ? 'text-green-700' : 'text-amber-700'}>{e.date_status} (imported)</span> · {e.scope === 'internal' ? 'internal event' : e.organizer_status === 'verified' ? 'Organizer documented' : 'Organizer review needed'}</p>
       {!compact && <>
         {e.organizer_company_id ? <Link href={`/competitors/${e.organizer_company_id}`} className="mt-2 block text-sm text-blue-700 hover:underline">{e.organizer_name}</Link> : <p className="mt-2 text-sm text-zinc-500">{e.organizer_name || 'Owner / organizer not yet verified'}</p>}
-        <p className="mt-1 text-xs text-zinc-600">{e.internal_products?.name || comparisons.map(m => `${m.internal_products?.name} (${m.relationship_type}, ${m.review_status})`).join(' · ') || 'CRA comparison needed'}</p>
-        {overlaps.length > 0 && <p className="mt-2 text-xs text-amber-800" title={overlaps.map(o => o.name).join('; ')}>Same-country date overlap with {overlaps.length} CRA event(s){!isConfirmed(e) || overlaps.some(o => !isConfirmed(o)) ? ' · tentative' : ''}</p>}
+        <p className="mt-1 text-xs text-zinc-600">{e.internal_products?.name || comparisons.map(m => `${m.internal_products?.name} (${m.relationship_type}, ${m.review_status})`).join(' · ') || 'Portfolio comparison needed'}</p>
+        {overlaps.length > 0 && <p className="mt-2 text-xs text-amber-800" title={overlaps.map(o => o.name).join('; ')}>Same-country date overlap with {overlaps.length} internal event(s){!isConfirmed(e) || overlaps.some(o => !isConfirmed(o)) ? ' · tentative' : ''}</p>}
       </>}
     </article>;
   }
   return <div className="space-y-5">
-    <div className="flex flex-wrap justify-between gap-3"><div><h1 className="text-2xl font-semibold">Industry Events</h1><p className="mt-1 text-sm text-zinc-600">2027 calendar, organizer evidence, and competition across the CRA event portfolio.</p></div><button onClick={download} className={input}>Export filtered CSV</button></div>
+    <div className="flex flex-wrap justify-between gap-3"><div><h1 className="text-2xl font-semibold">Industry Events</h1><p className="mt-1 text-sm text-zinc-600">Event calendar, organizer evidence, and competition across the internal event portfolio.</p></div><button onClick={download} className={input}>Export filtered CSV</button></div>
     <div className="grid grid-cols-2 gap-3 md:grid-cols-4">{[
-      ['Events', events.length], ['CRA events', events.filter(e => e.scope === 'internal').length],
+      ['Events', events.length], ['internal events', events.filter(e => e.scope === 'internal').length],
       ['Ownership review needed', events.filter(e => e.organizer_status === 'pending').length], ['Tentative / TBA dates', events.filter(e => !isConfirmed(e)).length]
     ].map(([label,value]) => <div key={label} className="rounded-lg border border-zinc-200 bg-white p-3"><div className="text-2xl font-semibold">{value}</div><div className="text-xs text-zinc-500">{label}</div></div>)}</div>
     <div className="space-y-3 rounded-xl border border-zinc-200 bg-white p-4">
       <label className="block text-sm">Search events, organizers, places, or topics<input value={filters.search} onChange={e => set('search',e.target.value)} className={`${input} mt-1 block w-full`} placeholder="e.g. Gartner, identity, or Boston" /></label>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <label className="text-xs">Region<select className={`${input} mt-1 w-full`} value={filters.region} onChange={e => set('region',e.target.value)}><option value="">All regions</option>{regions.map(r => <option key={r}>{r}</option>)}</select></label>
-        <label className="text-xs">Event scope<select className={`${input} mt-1 w-full`} value={filters.scope} onChange={e => set('scope',e.target.value)}><option value="">All events</option><option value="internal">CRA internal</option><option value="external">External, organizer linked</option><option value="unresolved">Unresolved organizer</option></select></label>
+        <label className="text-xs">Event scope<select className={`${input} mt-1 w-full`} value={filters.scope} onChange={e => set('scope',e.target.value)}><option value="">All events</option><option value="internal">Internal</option><option value="external">External, organizer linked</option><option value="unresolved">Unresolved organizer</option></select></label>
         <label className="text-xs">Dates<select className={`${input} mt-1 w-full`} value={filters.dates} onChange={e => set('dates',e.target.value)}><option value="">All date statuses</option><option value="confirmed">Confirmed in workbook</option><option value="tentative">Tentative / TBA / watch</option></select></label>
         <label className="text-xs">Organizer evidence<select className={`${input} mt-1 w-full`} value={filters.owner} onChange={e => set('owner',e.target.value)}><option value="">All ownership statuses</option><option value="verified">Documented</option><option value="pending">Needs review</option></select></label>
-        <label className="text-xs">CRA portfolio<select className={`${input} mt-1 w-full`} value={filters.portfolio} onChange={e => set('portfolio',e.target.value)}><option value="">All CRA offerings</option>{portfolio.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
+        <label className="text-xs">internal portfolio<select className={`${input} mt-1 w-full`} value={filters.portfolio} onChange={e => set('portfolio',e.target.value)}><option value="">All portfolio offerings</option>{portfolio.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
         <label className="text-xs">Competition review<select className={`${input} mt-1 w-full`} value={filters.review} onChange={e => set('review',e.target.value)}><option value="">All comparisons</option><option value="proposed">Proposed</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></label>
         {view === 'list' && <label className="text-xs">Month<input type="month" value={filters.month} onChange={e => set('month',e.target.value)} className={`${input} mt-1 w-full`} /></label>}
-        <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={filters.overlaps} onChange={e => set('overlaps',e.target.checked)} />Same-country CRA date overlap</label>
+        <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={filters.overlaps} onChange={e => set('overlaps',e.target.checked)} />Same-country internal date overlap</label>
       </div>
       <div className="flex flex-wrap items-center gap-2"><button onClick={() => setFilters(empty)} className={input}>Clear filters</button><button aria-pressed={view === 'list'} onClick={() => setView('list')} className={`${input} ${view === 'list' ? 'font-semibold bg-zinc-100' : ''}`}>List</button><button aria-pressed={view === 'calendar'} onClick={() => setView('calendar')} className={`${input} ${view === 'calendar' ? 'font-semibold bg-zinc-100' : ''}`}>Calendar</button><span role="status" className="text-sm text-zinc-500">{rows.length} of {events.length} events</span></div>
     </div>
-    <p className="text-xs text-zinc-500">Dates, attendance, and prices retain the workbook’s status and estimate basis. Organizer evidence is checked separately. Proposed CRA comparisons are analyst suggestions and affect scores only after approval.</p>
+    <p className="text-xs text-zinc-500">Dates, attendance, and prices retain the workbook’s status and estimate basis. Organizer evidence is checked separately. Proposed Portfolio comparisons are analyst suggestions and affect scores only after approval.</p>
     {view === 'list' ? <div className="grid gap-3 lg:grid-cols-2">{rows.map(e => card(e))}</div> : <>
       <label className="block text-sm">Calendar month<input type="month" required value={month} onChange={e => { if (e.target.value) setMonth(e.target.value); }} className={`${input} ml-2`} /></label>
       <div className="overflow-x-auto"><div className="grid min-w-[800px] grid-cols-7 gap-2">{['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(day => <div key={day} className="text-center text-xs font-medium text-zinc-500">{day}</div>)}

@@ -23,7 +23,7 @@ export async function enrichCompany(_previous: EnrichState, formData: FormData):
     if (!user) throw new Error("Please sign in again.");
     const { data: profile, error: profileError } = await supabase.from("users").select("organization_id, role").eq("id", user.id).single();
     if (profileError || !profile || !canEdit(profile.role)) throw new Error("Enrichment requires Administrator or Analyst access.");
-    if (!process.env.GROQ_API_KEY) throw new Error("Add GROQ_API_KEY to Vercel, then redeploy.");
+    if (!process.env.GROQ_API_KEY) throw new Error("Add GROQ_API_KEY to the server environment, then redeploy.");
     const orgId = profile.organization_id;
     const { data: company, error: companyError } = await supabase.from("companies").select("id, name, description").eq("id", companyId).eq("organization_id", orgId).single();
     if (companyError || !company) throw new Error("This competitor is not available in your organization.");

@@ -75,7 +75,7 @@ export default async function CompetitorProfile({ params }: { params: Promise<{ 
 
       <EnrichPanel companyId={company.id} canEdit={canEdit} configured={!!process.env.GROQ_API_KEY} />
       <LinkedEvents field="organizer_company_id" id={company.id} />
-      {relationships.length > 0 && <Section title="Active CRA portfolio relationships"><ul className="space-y-3">{relationships.map((r: any,i: number) => <li key={i} className="text-sm"><div className="font-medium">{r.internal_products?.name} · {r.relationship_type}</div>{r.products && <Link className="text-blue-700 hover:underline" href={`/products/${r.products.id}`}>{r.products.name}</Link>}{r.notes && <p className="mt-1 text-zinc-600">{r.notes}</p>}</li>)}</ul></Section>}
+      {relationships.length > 0 && <Section title="Active internal portfolio relationships"><ul className="space-y-3">{relationships.map((r: any,i: number) => <li key={i} className="text-sm"><div className="font-medium">{r.internal_products?.name} · {r.relationship_type}</div>{r.products && <Link className="text-blue-700 hover:underline" href={`/products/${r.products.id}`}>{r.products.name}</Link>}{r.notes && <p className="mt-1 text-zinc-600">{r.notes}</p>}</li>)}</ul></Section>}
 
       {/* Score breakdown */}
       <Section title="Score Breakdown">

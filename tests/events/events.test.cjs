@@ -12,14 +12,14 @@ function load(file) {
 }
 const {filterEvents,occursInMonth,craDateOverlaps,eventsCSV,safeEventURL,eventDate}=load('lib/events.ts');
 const filters={search:'',region:'',scope:'',dates:'',owner:'',portfolio:'',review:'',month:'',overlaps:false};
-const base={id:'external',name:'Identity event',scope:'external',start_date:'2027-01-30',end_date:'2027-02-02',date_status:'Confirmed',city:'Boston',country:'United States',region:'North America',organizer_name:'Terrapinn',organizer_status:'verified',raw_fields:{'Estimated Attendance':'2,000 (estimated)'},source_row:2,event_portfolio_matches:[{internal_product_id:'identity',review_status:'proposed',relationship_type:'partial',internal_products:{name:'Identiverse'}}]};
-const own={...base,id:'own',name:'CRA summit',scope:'internal',start_date:'2027-02-01',end_date:'2027-02-01',event_portfolio_matches:[],internal_product_id:'summit'};
+const base={id:'external',name:'Identity event',scope:'external',start_date:'2027-01-30',end_date:'2027-02-02',date_status:'Confirmed',city:'Boston',country:'United States',region:'North America',organizer_name:'Example Organizer',organizer_status:'verified',raw_fields:{'Estimated Attendance':'2,000 (estimated)'},source_row:2,event_portfolio_matches:[{internal_product_id:'identity',review_status:'proposed',relationship_type:'partial',internal_products:{name:'Identity Portfolio Offering'}}]};
+const own={...base,id:'own',name:'Internal summit',scope:'internal',start_date:'2027-02-01',end_date:'2027-02-01',event_portfolio_matches:[],internal_product_id:'summit'};
 const unknown={...base,id:'unknown',name:'Watch event',scope:'unresolved',start_date:null,end_date:null,date_status:'Unconfirmed / watch',organizer_status:'pending',event_portfolio_matches:[]};
 const all=[base,own,unknown];
 assert.equal(occursInMonth(base,'2027-02'),true,'Multi-day events must span month boundaries');
 assert.equal(occursInMonth(base,'2027-03'),false);
 assert.equal(occursInMonth(unknown,'2027-01'),false,'Undated watch rows must not get fake dates');
-assert.equal(filterEvents(all,{...filters,search:'terrapinn',portfolio:'identity'}).length,1);
+assert.equal(filterEvents(all,{...filters,search:'example organizer',portfolio:'identity'}).length,1);
 assert.equal(filterEvents(all,{...filters,portfolio:'summit'}).length,1,'Internal portfolio filter');
 assert.equal(filterEvents(all,{...filters,owner:'pending'}).length,1);
 assert.equal(filterEvents(all,{...filters,dates:'confirmed'}).length,2);
@@ -38,6 +38,6 @@ assert.match(csv,/'=HYPERLINK\(""bad""\)/,'CSV formula injection must be neutral
 assert.match(csv,/2,000 \(estimated\)/,'Estimate text must be preserved');
 const React=require('react');const {renderToStaticMarkup}=require('react-dom/server');
 const {EventExplorer}=load('app/(app)/events/EventExplorer.tsx');
-const html=renderToStaticMarkup(React.createElement(EventExplorer,{events:all,portfolio:[{id:'identity',name:'Identiverse'}]}));
-assert.match(html,/Industry Events/);assert.match(html,/Organizer review needed/);assert.match(html,/CRA event/);assert.match(html,/proposed/);assert.match(html,/\/events\/external/);
+const html=renderToStaticMarkup(React.createElement(EventExplorer,{events:all,portfolio:[{id:'identity',name:'Identity Portfolio Offering'}]}));
+assert.match(html,/Industry Events/);assert.match(html,/Organizer review needed/);assert.match(html,/internal event/);assert.match(html,/proposed/);assert.match(html,/\/events\/external/);
 console.log('PASS: event filtering, month boundaries, undated events, overlap signals, rejected comparisons, URL safety, CSV safety, and rendered explorer');

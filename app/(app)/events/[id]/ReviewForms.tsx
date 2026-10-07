@@ -32,7 +32,7 @@ export function ComparisonForm({eventId,portfolio}:{eventId:string;portfolio:{id
   const [state,action,pending] = useActionState(addComparison,initial);
   return <form action={action} className="space-y-3">
     <input type="hidden" name="eventId" value={eventId}/>
-    <label className="block text-sm">CRA offering<select name="portfolioId" className={`${input} mt-1`} required><option value="">Select an offering</option>{portfolio.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
+    <label className="block text-sm">portfolio offering<select name="portfolioId" className={`${input} mt-1`} required><option value="">Select an offering</option>{portfolio.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
     <label className="block text-sm">Why it competes<textarea name="rationale" required minLength={15} maxLength={4000} rows={3} className={`${input} mt-1`}/></label>
     <button disabled={pending} className={button}>{pending ? 'Adding…' : 'Add comparison'}</button><Message state={state}/>
   </form>;

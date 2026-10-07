@@ -1,8 +1,9 @@
+import { appName } from "@/lib/branding";
 import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Competitive Intelligence Platform",
+  title: appName,
   description: "Competitor monitoring, evidence, and scoring.",
 };
 
@@ -13,3 +14,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+

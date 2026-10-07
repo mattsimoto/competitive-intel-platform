@@ -46,7 +46,7 @@ export async function addComparison(_state: EventActionState, form: FormData): P
   try {
     const { db, org } = await context();
     const eventId = form.get('eventId'); const portfolioId = form.get('portfolioId'); const rationale = String(form.get('rationale') || '').trim();
-    if (!uuid(eventId) || !uuid(portfolioId) || rationale.length < 15 || rationale.length > 4000) throw new Error('Select a CRA offering and explain the overlap (15–4,000 characters).');
+    if (!uuid(eventId) || !uuid(portfolioId) || rationale.length < 15 || rationale.length > 4000) throw new Error('Select a portfolio offering and explain the overlap (15–4,000 characters).');
     const { error } = await db.from('event_portfolio_matches').insert({organization_id:org,event_id:eventId,internal_product_id:portfolioId,relationship_type:'adjacent',rationale,review_status:'proposed'});
     if (error) throw new Error('Could not add this comparison. It may already exist for this event.');
     revalidatePath('/events'); revalidatePath(`/events/${eventId}`);

@@ -1,0 +1,8 @@
+node_modules/
+.next/
+.env*
+!.env.example
+!.env.bootstrap.example
+*.tsbuildinfo
+supabase/.temp/
+supabase/.branches/

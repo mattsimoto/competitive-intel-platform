@@ -56,7 +56,7 @@ export function filterEvents(events: IndustryEvent[], f: EventFilters) {
 export function eventsCSV(events: IndustryEvent[]) {
   // Prefix formula-like values before quoting so spreadsheet apps treat them as text.
   const cell = (value: unknown) => { const s = String(value ?? ''); return '"' + (/^[\s]*[=+@-]/.test(s) ? "'" + s : s).replace(/"/g, '""') + '"'; };
-  const head = ['Event','Start','End','Date status (imported)','City','Country','Region','Scope','Organizer','Ownership status','Ownership evidence','CRA comparisons','Attendance (imported)','Attendance basis','Registration pricing (imported)','Sponsorship pricing (imported)','Website','Workbook row'];
+  const head = ['Event','Start','End','Date status (imported)','City','Country','Region','Scope','Organizer','Ownership status','Ownership evidence','Portfolio comparisons','Attendance (imported)','Attendance basis','Registration pricing (imported)','Sponsorship pricing (imported)','Website','Workbook row'];
   return [head, ...events.map(e => [e.name,e.start_date,e.end_date,e.date_status,e.city,e.country,e.region,e.scope,e.organizer_name,e.organizer_status,e.owner_evidence_url,
     e.event_portfolio_matches.map(m => `${m.internal_products?.name}: ${m.relationship_type} (${m.review_status})`).join('; '),e.raw_fields['Estimated Attendance'],e.raw_fields['Attendance Estimate Basis'],e.raw_fields['Attendance / Registration Pricing'],e.raw_fields['Sponsorship / Exhibitor Pricing'],e.website_url,e.source_row])].map(row => row.map(cell).join(',')).join('\r\n');
 }

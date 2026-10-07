@@ -1,0 +1,10 @@
+const fs=require('node:fs');const ts=require('typescript');const assert=require('node:assert/strict');
+const moduleContext={exports:{}};
+new Function('exports','module',ts.transpileModule(fs.readFileSync('lib/csv.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText)(moduleContext.exports,moduleContext);
+const {parseCsv}=moduleContext.exports;
+assert.deepEqual(parseCsv('name,description\r\n"Example, Inc.","line one\nline ""two"""\r\n'),[{name:'Example, Inc.',description:'line one\nline "two"'}]);
+assert.throws(()=>parseCsv('name,name\na,b'),/unique/);
+assert.throws(()=>parseCsv('name,url\nMissing cell'),/cells/);
+assert.throws(()=>parseCsv('name\n"unclosed'),/Unclosed/);
+assert.throws(()=>parseCsv('name\n"closed"junk'),/Unexpected/);
+console.log('PASS: quoted CSV, multiline cells, duplicate headers and malformed rows');

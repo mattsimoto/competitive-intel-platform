@@ -17,7 +17,7 @@ export function EnrichPanel({ companyId, canEdit, configured }: { companyId: str
           {pending ? "Enriching…" : "Enrich now (AI)"}
         </button>
         <p className="text-xs text-zinc-600">
-          {!canEdit ? "Administrator or Analyst access is required." : !configured ? "AI needs GROQ_API_KEY in Vercel and a redeploy." : "Reads up to 3 active sources and proposes evidence-backed findings for review."}
+          {!canEdit ? "Administrator or Analyst access is required." : !configured ? "AI needs GROQ_API_KEY in the server environment and a redeploy." : "Reads up to 3 active sources and proposes evidence-backed findings for review."}
         </p>
       </form>
       <div aria-live="polite" aria-atomic="true" className="mt-2 text-sm">

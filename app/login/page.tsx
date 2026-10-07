@@ -1,4 +1,5 @@
 "use client";
+import { appName } from "@/lib/branding";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -25,7 +26,7 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center p-6">
       <form onSubmit={onSubmit} className="w-full max-w-sm rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-        <h1 className="text-lg font-semibold">Competitive Intelligence</h1>
+        <h1 className="text-lg font-semibold">{appName}</h1>
         <p className="mt-1 text-sm text-zinc-500">Sign in to continue.</p>
         <label className="mt-5 block text-sm font-medium text-zinc-700">Email</label>
         <input
@@ -48,3 +49,4 @@ export default function LoginPage() {
     </main>
   );
 }
+
