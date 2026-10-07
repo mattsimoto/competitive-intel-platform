@@ -1,0 +1,832 @@
+{
+  "verified_on": "2026-10-07",
+  "owners": [
+    {
+      "rows": [
+        3,
+        5,
+        23
+      ],
+      "name": "Palo Alto Networks",
+      "url": "https://register.paloaltonetworks.com/igniteontour/",
+      "notes": "Ignite on Tour is Palo Alto Networks’ vendor event series. Vendor sponsorship economics differ from independent events.",
+      "website": "https://register.paloaltonetworks.com/igniteontour/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        4,
+        86
+      ],
+      "name": "Cybertech / Arrowmedia Israel",
+      "url": "https://www.cybertechisrael.com/delegations",
+      "notes": "Cybertech’s official consent notice identifies Cybertech group entities including Arrowmedia Israel. Regional legal contracting entities can vary; this record groups the event producer, not its sponsors.",
+      "website": "https://www.cybertechconference.com/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        9
+      ],
+      "name": "Corinium Global Intelligence",
+      "url": "https://ciso-syd.coriniumintelligence.com/contact-us",
+      "notes": "CISO Sydney’s official site and contact details identify Corinium as the event producer.",
+      "website": "https://www.coriniumintelligence.com/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        13,
+        17,
+        40,
+        47,
+        49,
+        55
+      ],
+      "name": "Gartner",
+      "url": "https://www.gartner.com/en/conferences/na/security-risk-management-us",
+      "notes": "Gartner’s official conference portfolio identifies its Cybersecurity & Risk Management Summits. The existing Gartner event-specific imports are preserved as separate legacy records.",
+      "website": "https://www.gartner.com/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        14
+      ],
+      "name": "heise conferences GmbH",
+      "url": "https://secit-heise.de/impressum",
+      "notes": "secIT’s legal imprint identifies heise conferences GmbH, a heise group company.",
+      "website": "https://www.heise-conferences.de/",
+      "aliases": [],
+      "parent": "heise group",
+      "parent_url": "https://www.heisegroup.de/"
+    },
+    {
+      "rows": [
+        16
+      ],
+      "name": "Linux Foundation / CNCF",
+      "url": "https://events.linuxfoundation.org/kubecon-cloudnativecon-europe/",
+      "notes": "KubeCon + CloudNativeCon is CNCF’s flagship conference delivered through Linux Foundation Events. Broad cloud-native attendance includes security practitioners; this is adjacent competition.",
+      "website": "https://www.linuxfoundation.org/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        18,
+        68
+      ],
+      "name": "Billington CyberSecurity",
+      "url": "https://billingtoncybersecurity.com/events/",
+      "notes": "Billington’s official events portfolio identifies its government-focused summits.",
+      "website": "https://billingtoncybersecurity.com/",
+      "aliases": [
+        "Billington"
+      ],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        20
+      ],
+      "name": "IAPP",
+      "url": "https://iapp.org/conference/iapp-global-summit",
+      "notes": "IAPP produces the Global Summit for privacy, AI governance, and cybersecurity law professionals.",
+      "website": "https://iapp.org/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        21
+      ],
+      "name": "RSA Conference LLC (RSAC)",
+      "url": "https://www.rsaconference.com/legal-notices",
+      "notes": "The official legal notices identify RSA Conference LLC. Do not conflate this producer with the RSA security software business.",
+      "website": "https://www.rsaconference.com/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        22,
+        28,
+        37,
+        46
+      ],
+      "name": "SANS Institute",
+      "url": "https://www.sans.org/cyber-security-training-events/",
+      "notes": "SANS publishes and runs its training events and summits. Training-led formats compete partially for practitioner education budgets.",
+      "website": "https://www.sans.org/",
+      "aliases": [
+        "SANS"
+      ],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        27,
+        52,
+        100
+      ],
+      "name": "ISACA",
+      "url": "https://www.isaca.org/training-and-events/conferences",
+      "notes": "ISACA’s official conference portfolio identifies North America, Europe, and GRC conferences. The GRC event is jointly presented with The Institute of Internal Auditors (IIA); IIA is a co-organizer, not a sponsor.",
+      "website": "https://www.isaca.org/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        29,
+        51,
+        58
+      ],
+      "name": "AFCEA International",
+      "url": "https://www.afcea.org/events",
+      "notes": "AFCEA’s official portfolio lists TechNet events. Government and defense emphasis implies partial or adjacent overlap with CRA.",
+      "website": "https://www.afcea.org/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        30,
+        94
+      ],
+      "name": "PROIDEA Sp. z o.o.",
+      "url": "https://confidence-conference.org/",
+      "notes": "CONFidence identifies PROIDEA as producer; Oh My Hack also names PROIDEA as organizer, with Zaufana Trzecia Strona providing editorial expertise.",
+      "website": "https://proidea.pl/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        31,
+        33
+      ],
+      "name": "ITWeb",
+      "url": "https://www.itweb.co.za/event/itweb-security-summit/",
+      "notes": "ITWeb’s official Security Summit portfolio covers its South African conference series.",
+      "website": "https://www.itweb.co.za/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        36
+      ],
+      "name": "Cisco",
+      "url": "https://www.ciscolive.com/",
+      "notes": "Cisco Live’s official website identifies Cisco Systems. This is a broad vendor and partner event with security programming.",
+      "website": "https://www.cisco.com/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        38
+      ],
+      "name": "RX (Reed Exhibitions)",
+      "url": "https://www.infosecurityeurope.com/",
+      "notes": "The official event footer identifies Reed Exhibitions Limited / RX. RELX is identified as the group; event brand names are not treated as separate legal owners.",
+      "website": "https://rxglobal.com/",
+      "aliases": [],
+      "parent": "RELX",
+      "parent_url": "https://www.relx.com/"
+    },
+    {
+      "rows": [
+        39
+      ],
+      "name": "FIRST",
+      "url": "https://www.first.org/conference/",
+      "notes": "FIRST’s official annual conference portfolio documents its incident-response community event.",
+      "website": "https://www.first.org/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        42
+      ],
+      "name": "ERNW Enno Rey Netzwerke GmbH",
+      "url": "https://troopers.de/",
+      "notes": "TROOPERS’ official footer identifies ERNW Enno Rey Netzwerke GmbH.",
+      "website": "https://ernw.de/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        44,
+        54
+      ],
+      "name": "OWASP Foundation",
+      "url": "https://owasp.org/policy/events",
+      "notes": "OWASP’s official policy identifies Global AppSec conferences as Foundation events. Local AppSec Israel is not assumed to share the same legal organizer without verification.",
+      "website": "https://owasp.org/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        48,
+        76,
+        114
+      ],
+      "name": "Black Hat",
+      "url": "https://blackhat.com/",
+      "notes": "Black Hat’s official footer identifies the Black Hat / Informa Festivals business and Informa PLC. Black Hat MEA has separate co-organizer documentation.",
+      "website": "https://blackhat.com/",
+      "aliases": [],
+      "parent": "Informa PLC",
+      "parent_url": "https://www.informa.com/"
+    },
+    {
+      "rows": [
+        50
+      ],
+      "name": "DEF CON",
+      "url": "https://defcon.org/",
+      "notes": "DEF CON’s own website documents its flagship conference brand. The speculative Middle East listing is held separately for ownership and occurrence verification.",
+      "website": "https://defcon.org/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        56
+      ],
+      "name": "NürnbergMesse GmbH",
+      "url": "https://www.itsa365.de/en",
+      "notes": "The official it-sa platform footer identifies NürnbergMesse GmbH.",
+      "website": "https://www.nuernbergmesse.de/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        59
+      ],
+      "name": "Chaos Computer Club Veranstaltungsgesellschaft mbH",
+      "url": "https://legal.cccv.de/",
+      "notes": "CCC Events links to CCCV’s legal notice. This records the event operating entity rather than presuming every CCC chapter owns the Congress.",
+      "website": "https://events.ccc.de/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        60
+      ],
+      "name": "Fortinet",
+      "url": "https://www.fortinet.com/blog/business-and-technology/accelerate-2026-where-secure-networking-moves-forward",
+      "notes": "Fortinet’s official Accelerate article identifies the customer and partner conference.",
+      "website": "https://www.fortinet.com/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        61,
+        108
+      ],
+      "name": "Microsoft",
+      "url": "https://www.microsoft.com/en-us/security/business/microsoft-secure",
+      "notes": "Microsoft’s official Secure and Israel R&D websites identify its vendor events. BlueHat IL’s event details still require date verification.",
+      "website": "https://www.microsoft.com/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        63,
+        64
+      ],
+      "name": "FS-ISAC",
+      "url": "https://www.fsisac.com/events",
+      "notes": "FS-ISAC’s official events portfolio identifies its summits and member community; financial-services focus narrows audience overlap.",
+      "website": "https://www.fsisac.com/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        65
+      ],
+      "name": "Security BSides Las Vegas, Inc.",
+      "url": "https://bsideslv.org/",
+      "notes": "The Las Vegas site identifies Security BSides Las Vegas, Inc. Independent BSides chapters are not rolled into a single corporate owner.",
+      "website": "https://bsideslv.org/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        66
+      ],
+      "name": "The Diana Initiative",
+      "url": "https://www.dianainitiative.org/",
+      "notes": "The Diana Initiative’s official site documents its community conference. It is tracked as a community organizer without an inferred commercial parent.",
+      "website": "https://www.dianainitiative.org/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        67
+      ],
+      "name": "CrowdStrike",
+      "url": "https://www.crowdstrike.com/en-us/events/fal-con/las-vegas/",
+      "notes": "CrowdStrike’s official event page documents Fal.Con. It is a vendor-led event with a sponsorship ecosystem.",
+      "website": "https://www.crowdstrike.com/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        69
+      ],
+      "name": "Splunk",
+      "url": "https://www.splunk.com/en_us/blog/leadership/powering-and-protecting-the-ai-revolution-a-new-era-for-splunk-and-cisco-at-conf25",
+      "notes": "Splunk’s official .conf article documents the event and its Cisco relationship.",
+      "website": "https://www.splunk.com/",
+      "aliases": [],
+      "parent": "Cisco",
+      "parent_url": "https://www.cisco.com/"
+    },
+    {
+      "rows": [
+        71
+      ],
+      "name": "ISC2",
+      "url": "https://www.isc2.org/professional-development/events",
+      "notes": "ISC2’s official event portfolio identifies Security Congress as its flagship conference.",
+      "website": "https://www.isc2.org/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        72
+      ],
+      "name": "Amazon Web Services",
+      "url": "https://reinvent.awsevents.com/",
+      "notes": "AWS’ official re:Invent website identifies its cloud education and partner event.",
+      "website": "https://aws.amazon.com/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        74,
+        121
+      ],
+      "name": "Payatu Technologies",
+      "url": "https://nullcon.net/nullcon-cybersecurity-conference-secures-strategic-investment-from-ismg-to-drive-growth-and-lnnovation/",
+      "notes": "Nullcon’s official announcement identifies Payatu Technologies as parent of Nullcon and reports ISMG’s majority investment.",
+      "website": "https://nullcon.net/",
+      "aliases": [],
+      "parent": "iSMG",
+      "parent_url": "https://ismg.io/"
+    },
+    {
+      "rows": [
+        78
+      ],
+      "name": "Synacktiv",
+      "url": "https://www.hexacon.fr/about/team/",
+      "notes": "Hexacon’s team page identifies Synacktiv as the company supporting and organizing the conference.",
+      "website": "https://www.synacktiv.com/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        83
+      ],
+      "name": "INCIBE",
+      "url": "https://www.incibe.es/en/incibe/tags/enise",
+      "notes": "INCIBE’s official ENISE archive identifies it as the organizing agency. Public-sector events are assessed as adjacent competition, not presumed commercial equivalents.",
+      "website": "https://www.incibe.es/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        87,
+        88,
+        89
+      ],
+      "name": "Astrea s.r.l.",
+      "url": "https://securitysummit.it/homepage",
+      "notes": "The official site distinguishes Clusit as event designer and Astrea as organizer. Clusit is a co-producing association, not Astrea’s parent.",
+      "website": "https://securitysummit.it/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        90
+      ],
+      "name": "Cyber Saiyan",
+      "url": "https://romhack.io/",
+      "notes": "RomHack’s official website identifies non-profit Cyber Saiyan as creator and organizer.",
+      "website": "https://www.cybersaiyan.it/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        91,
+        92
+      ],
+      "name": "HackInBo Group",
+      "url": "https://www.hackinbo.it/",
+      "notes": "HackInBo’s official site identifies HackInBo Group. No unverified corporate parent is inferred.",
+      "website": "https://www.hackinbo.it/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        93
+      ],
+      "name": "Fundacja Academic Partners",
+      "url": "https://thehacksummit.com/",
+      "notes": "The Hack Summit FAQ identifies Academic Partners Foundation and Poland’s Cyber Defence Forces Component Command as joint organizers. The latter is a public-sector co-organizer, not a corporate parent.",
+      "website": "https://fundacjaap.org.pl/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        96
+      ],
+      "name": "Evention",
+      "url": "https://atsummit.pl/",
+      "notes": "Advanced Threat Summit’s official organizer and footer identify Evention. Other editorial partners are not treated as owners without further evidence.",
+      "website": "https://evention.pl/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        98
+      ],
+      "name": "Securitum",
+      "url": "https://hackingparty.pl/",
+      "notes": "Mega Sekurak Hacking Party’s official registration and organizer contact use Securitum. Sekurak is the event’s editorial/community brand.",
+      "website": "https://securitum.pl/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        101,
+        112
+      ],
+      "name": "Dubai World Trade Centre",
+      "url": "https://gisec.ae/mansoor-bin-mohammed-opens-gisec-global-2024",
+      "notes": "GISEC’s official release identifies DWTC as organizer and the UAE Cybersecurity Council as host. GITEX is also a DWTC event; host, venue, and organizer roles are distinguished.",
+      "website": "https://www.dwtc.com/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        103
+      ],
+      "name": "Tahaluf",
+      "url": "https://blackhatmea.com/about-us/key-information",
+      "notes": "Black Hat MEA identifies Tahaluf and SAFCSP as co-organizers, in association with the global Black Hat team. Tahaluf is a joint venture of Informa PLC, SAFCSP, and EIF; it is not represented as a wholly-owned subsidiary.",
+      "website": "https://tahaluf.com/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        116
+      ],
+      "name": "Tradepass",
+      "url": "https://indosecsummit.com/",
+      "notes": "IndoSec’s official website identifies Tradepass as producer.",
+      "website": "https://www.tradepassglobal.com/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        117
+      ],
+      "name": "CloserStill Media",
+      "url": "https://www.closerstillmedia.com/events-library/cyber-security-world-asia",
+      "notes": "CloserStill’s official event portfolio lists Cyber Security World Asia.",
+      "website": "https://www.closerstillmedia.com/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        118
+      ],
+      "name": "Image Engine",
+      "url": "https://www.govware.sg/about-govware",
+      "notes": "GovWare identifies Image Engine as producer and organizer. Singapore International Cyber Week is the wider programme; this combined workbook row is not evidence that Image Engine owns all SICW events.",
+      "website": "https://www.govware.sg/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        119
+      ],
+      "name": "ZESUROKU Inc. / CODE BLUE committee",
+      "url": "https://codeblue.jp/",
+      "notes": "CODE BLUE’s official site identifies its executive committee and ZESUROKU Inc. secretariat. This records the organizing office rather than inferring an unlisted parent.",
+      "website": "https://codeblue.jp/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        120,
+        124
+      ],
+      "name": "Australian Information Security Association",
+      "url": "https://www.cyberconnect.org.au/",
+      "notes": "AISA’s official portfolio identifies CyberCon. CyberConnect Canberra’s official website explicitly identifies AISA as host and provides AISA sponsorship contacts.",
+      "website": "https://www.aisa.org.au/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        122
+      ],
+      "name": "Information Security Research Association",
+      "url": "https://india.c0c0n.org/2025/sponsorship",
+      "notes": "c0c0n’s official sponsorship information identifies ISRA and Kerala Police as joint organizers. Government collaborators are documented separately from corporate ownership.",
+      "website": "https://c0c0n.org/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        123
+      ],
+      "name": "AUSCERT",
+      "url": "https://2024.conference.auscert.org.au/who-we-are/index.html",
+      "notes": "AUSCERT is the conference producer and is part of The University of Queensland, as documented in AUSCERT’s official organizational description.",
+      "website": "https://auscert.org.au/",
+      "aliases": [],
+      "parent": "The University of Queensland",
+      "parent_url": "https://auscert.org.au/about-us/"
+    },
+    {
+      "rows": [
+        2
+      ],
+      "name": "Messe Frankfurt Middle East",
+      "url": "https://intersecglobal.ae.messefrankfurt.com/dubai/en/contact.html",
+      "notes": "Intersec’s official contact page places the event in Messe Frankfurt Middle East’s exhibition portfolio. Physical security and fire sectors mean total show attendance is not all cybersecurity attendance.",
+      "website": "https://ae.messefrankfurt.com/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        8
+      ],
+      "name": "CINI Cybersecurity National Lab",
+      "url": "https://itasec.it/call-for-papers/",
+      "notes": "ITASEC’s official call for papers identifies CINI Cybersecurity National Lab as organizer. Local hosts and programme partners are not inferred to be corporate parents.",
+      "website": "https://cybersecnatlab.it/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        53
+      ],
+      "name": "Terrapinn",
+      "url": "https://www.terrapinn.com/exhibition/identity-week-america/",
+      "notes": "Terrapinn’s official site and event portfolio identify Identity Week America. The event covers enterprise identity, government identity, and secure credentials.",
+      "website": "https://www.terrapinn.com/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        15
+      ],
+      "name": "Forward Global",
+      "url": "https://europe.forum-incyber.com/",
+      "notes": "The official INCYBER Forum Europe site identifies Forward Global as organizer.",
+      "website": "https://forwardglobal.com/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        43
+      ],
+      "name": "Tel Aviv University",
+      "url": "https://en-sectech.tau.ac.il/events/cyberweek25",
+      "notes": "Tel Aviv University identifies Cyber Week as jointly held by its ICRC and Yuval Ne’eman Workshop, the Israeli National Cyber Directorate, and the Ministry of Foreign Affairs. Public-sector co-organizers are documented without treating them as corporate parents.",
+      "website": "https://www.tau.ac.il/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        62
+      ],
+      "name": "SecWest / Dragos Ruiu",
+      "url": "https://www.secwest.net/en-our-team",
+      "notes": "SecWest’s official team page identifies Dragos Ruiu as organizer of CanSecWest. This is not the industrial-security company Dragos, Inc.; no corporate parent is inferred.",
+      "website": "https://www.secwest.net/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        77
+      ],
+      "name": "Comexposium One to One",
+      "url": "https://www.comexposium.com/en/newsroom/presse/les-assises-de-la-cybersecurite-2025the-turning-point-towards-a-new-digital-era/",
+      "notes": "Comexposium’s official release identifies Comexposium One to One as producer of Les Assises.",
+      "website": "https://www.comexposium.com/",
+      "aliases": [],
+      "parent": "Comexposium",
+      "parent_url": "https://www.comexposium.com/"
+    },
+    {
+      "rows": [
+        80
+      ],
+      "name": "Pôle d’excellence cyber",
+      "url": "https://www.pole-excellence-cyber.org/nos-programmes/european-cyber-week/",
+      "notes": "Pôle d’excellence cyber lists European Cyber Week among its own programmes. Defense and public-sector partners are not presumed corporate owners.",
+      "website": "https://www.pole-excellence-cyber.org/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        95
+      ],
+      "name": "NASK",
+      "url": "https://www.nask.pl/aktualnosci/secure-2024-wyznaczamy-horyzont-cyberbezpieczenstwa",
+      "notes": "NASK’s official SECURE conference article explicitly identifies NASK as organizer.",
+      "website": "https://www.nask.pl/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        111
+      ],
+      "name": "BThaber",
+      "url": "https://store.bthaber.com/urun-kategori/bilet/",
+      "notes": "BThaber’s own registration store lists BZsec event tickets and its editorial event coverage documents the conference.",
+      "website": "https://bthaber.com/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        125
+      ],
+      "name": "Ciberobs",
+      "url": "https://ciberobs.com/presentation/",
+      "notes": "Ciberobs’ official organizational presentation describes Cyber Africa Forum as its platform, delivered with partners. This does not infer partner organizations as parent companies.",
+      "website": "https://ciberobs.com/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        73
+      ],
+      "name": "Binary Gecko GmbH",
+      "url": "https://www.offensivecon.org/imprint.html",
+      "notes": "OffensiveCon’s current legal imprint identifies Binary Gecko GmbH. Older Blue Frost Security materials are not used to establish current ownership.",
+      "website": "https://www.offensivecon.org/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    },
+    {
+      "rows": [
+        109
+      ],
+      "name": "IDC",
+      "url": "https://event.idc.com/",
+      "notes": "IDC’s official events portal identifies IDC as producer of its analyst-led event portfolio. Country-specific event dates remain workbook claims, not newly verified dates.",
+      "website": "https://www.idc.com/",
+      "aliases": [],
+      "parent": null,
+      "parent_url": null
+    }
+  ],
+  "internal_rows": [
+    6,
+    7,
+    10,
+    11,
+    12,
+    19,
+    24,
+    25,
+    26,
+    32,
+    35,
+    41,
+    45,
+    57,
+    70
+  ],
+  "unresolved_rows": [
+    34,
+    75,
+    79,
+    81,
+    82,
+    84,
+    85,
+    97,
+    99,
+    102,
+    104,
+    105,
+    106,
+    107,
+    110,
+    113,
+    115,
+    126,
+    127
+  ]
+}

@@ -1,0 +1,2 @@
+'use client';
+export default function EventError({reset}:{reset:()=>void}) { return <div role="alert" className="rounded-lg border bg-white p-6"><h1 className="font-semibold">The event calendar could not be loaded</h1><p className="mt-2 text-sm text-zinc-600">Try again to retrieve the latest event records.</p><button className="mt-4 rounded-md bg-zinc-900 px-4 py-2 text-sm text-white" onClick={reset}>Try again</button></div>; }

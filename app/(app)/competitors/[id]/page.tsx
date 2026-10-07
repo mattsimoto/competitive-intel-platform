@@ -7,6 +7,7 @@ import { ScoreBreakdown } from "@/components/ScoreBreakdown";
 import { addSource, updateSource, deleteSource, recrawlSource } from "./actions";
 import { money, since } from "@/lib/format";
 import { EnrichPanel } from "./EnrichPanel";
+import { LinkedEvents } from '@/components/LinkedEvents';
 
 export const maxDuration = 60;
 
@@ -73,6 +74,8 @@ export default async function CompetitorProfile({ params }: { params: Promise<{ 
       </div>
 
       <EnrichPanel companyId={company.id} canEdit={canEdit} configured={!!process.env.GROQ_API_KEY} />
+      <LinkedEvents field="organizer_company_id" id={company.id} />
+      {relationships.length > 0 && <Section title="Active CRA portfolio relationships"><ul className="space-y-3">{relationships.map((r: any,i: number) => <li key={i} className="text-sm"><div className="font-medium">{r.internal_products?.name} · {r.relationship_type}</div>{r.products && <Link className="text-blue-700 hover:underline" href={`/products/${r.products.id}`}>{r.products.name}</Link>}{r.notes && <p className="mt-1 text-zinc-600">{r.notes}</p>}</li>)}</ul></Section>}
 
       {/* Score breakdown */}
       <Section title="Score Breakdown">
@@ -147,7 +150,7 @@ export default async function CompetitorProfile({ params }: { params: Promise<{ 
             <tbody>
               {products.map((p: any) => (
                 <tr key={p.id} className="border-b border-zinc-100">
-                  <td className="px-2 py-2 font-medium text-zinc-900">{p.name}</td>
+                  <td className="px-2 py-2 font-medium text-zinc-900"><Link href={`/products/${p.id}`} className="text-blue-700 hover:underline">{p.name}</Link></td>
                   <td className="px-2 py-2">{p.price ? money(p.price.price_min, p.price.price_max, p.price.currency) : "—"}</td>
                   <td className="px-2 py-2"><StatusChip status={p.intelligence_status} /></td>
                   <td className="px-2 py-2">

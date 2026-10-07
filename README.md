@@ -1,5 +1,50 @@
 # Competitive Intelligence Platform
 
+## Industry Events
+
+The **Industry Events** navigation item provides a searchable 2027 calendar in
+list and month views, with region, date-status, CRA-portfolio, organizer-evidence,
+and competition-review filters, same-country date-overlap signals, and CSV export.
+Event details preserve the workbook's attendance estimate basis, pricing text,
+source URLs, author-supplied verification date, and original row number.
+
+The calendar contains 126 occurrences: 92 external events with documented
+organizers and first-class competitor products, 15 CRA internal events, and 19
+unresolved organizers. Ownership evidence is separate from the workbook's date
+status. Internal events never create competitor companies, products, or matches.
+Co-organizers and operating entities are documented in ownership notes; supported
+parent companies are linked through the existing company hierarchy. Independent
+BSides chapters are not assumed to have one corporate owner. Legacy event-brand
+company imports are preserved without destructive merges.
+
+Six named CRA offerings are available for comparison: Cybersecurity Summit,
+CyberRisk Collaborative, Identiverse, InfoSec World, MSSP Alert Live, and ChannelPro
+events. The initial 182 comparisons are **proposals**, based on event focus.
+An Analyst or Administrator can document an unresolved organizer using an existing
+or new company and an official evidence URL. The atomic action creates its event
+product, source link, and audit record. Approved comparisons create active
+product-level competitive relationships and recalculate the organizer's score;
+rejection removes that relationship from active scoring. Other CRA offerings can
+be added to an event using its comparison picker. No artificial attendance or
+pricing numbers are generated from the imported ranges or historical examples.
+
+Deployment / import:
+
+1. Apply `supabase/migrations/20261007131632_industry_events.sql` and the category
+   compatibility migration `20261007133000_event_product_category.sql`.
+2. Generate SQL using
+   `python scripts/events/generate_import.py --org <organization uuid>` and apply
+   it to the intended organization. Repeating it skips existing event rows and
+   preserves analyst reviews, products, and evidence.
+3. The preserved input is `scripts/events/calendar-2027.json`; researched owner
+   mappings and explicit unresolved rows are in `scripts/events/organizers-2027.json`.
+
+Validation: `node tests/events/events.test.cjs`, `npm run build`, and the rollback-only
+integration assertions in `tests/events/database.sql` through Supabase. The latter
+exercise owner resolution, approval/rejection, duplicate protection, role/tenant
+permissions, internal-event exclusion, and review audit history without retaining
+test changes. These tests do not replace a signed-in production browser check.
+
 A continuously updated competitive-intelligence system: it tracks competitors at
 the offering level, monitors public sources, routes AI-detected changes through
 human review, preserves history, and scores competitors transparently.

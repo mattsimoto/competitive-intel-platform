@@ -75,7 +75,7 @@ export async function listCompanies(search?: string): Promise<LandscapeRow[]> {
   let q = supabase
     .from("companies")
     .select(
-      "id, name, competitive_score, confidence_score, intelligence_status, last_material_change_at, last_verified_at, competitive_relationships(internal_products(name))"
+      "id, name, competitive_score, confidence_score, intelligence_status, last_material_change_at, last_verified_at, competitive_relationships(active,internal_products(name))"
     )
     .order("competitive_score", { ascending: false, nullsFirst: false })
     .order("confidence_score", { ascending: false, nullsFirst: false })
@@ -91,7 +91,7 @@ export async function listCompanies(search?: string): Promise<LandscapeRow[]> {
     intelligence_status: c.intelligence_status,
     last_material_change_at: c.last_material_change_at,
     last_verified_at: c.last_verified_at,
-    areas: toAreas(c.competitive_relationships),
+    areas: toAreas((c.competitive_relationships ?? []).filter((r: any) => r.active)),
   }));
 }
 
@@ -108,8 +108,8 @@ export async function getCompanyProfile(id: string) {
     supabase.from("products").select("*").eq("company_id", id).order("name"),
     supabase
       .from("competitive_relationships")
-      .select("relationship_type, notes, internal_products(name)")
-      .eq("competitor_company_id", id),
+      .select("relationship_type, notes, internal_products(name), products(id,name)")
+      .eq("competitor_company_id", id).eq("active", true),
     supabase.from("company_topics").select("topics(name)").eq("company_id", id),
     supabase.from("company_customers").select("customers(name)").eq("company_id", id),
     supabase
@@ -523,7 +523,7 @@ export async function askIntelligence(q: string): Promise<AskResult> {
   const caveat = "Answered from imported structured data (confidence 60, pending verification).";
   const { data: areas } = await supabase.from("internal_products").select("id, name");
   const areaList = (areas ?? []) as { id: string; name: string }[];
-  const foundAreas = areaList.map((a) => a.name).filter((n) => text.includes(n.toLowerCase()));
+  const foundAreas = areaList.map((a) => a.name).filter((n) => text.includes(n.toLowerCase())).sort((a,b) => b.length-a.length);
 
   // 1) Price threshold: "under $20,000"
   const priceMatch = text.match(/(?:under|below|less than|cheaper than)\s*\$?\s*([\d,]+)/);

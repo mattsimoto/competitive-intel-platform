@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LinkedEvents } from '@/components/LinkedEvents';
 import { notFound } from "next/navigation";
 import { getProduct } from "@/lib/queries";
 import { ConfidenceBadge, StatusChip, Pill } from "@/components/badges";
@@ -54,6 +55,7 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
         </div>
       </div>
 
+      <LinkedEvents field="product_id" id={product.id} />
       <Section title="Overview">
         {product.description ? (
           <p className="text-sm text-zinc-700">{product.description}</p>
