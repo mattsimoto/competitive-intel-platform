@@ -18,16 +18,35 @@ import { classifyRelevance, extractIntelligence } from "./lib/ai.js";
 import { mapObservationType } from "./lib/mapping.js";
 
 const MAX_SOURCES = Number(process.env.INGEST_MAX_SOURCES ?? 25);
-const MODEL = process.env.ANTHROPIC_MODEL || "claude-haiku-4-5-20251001";
+const MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
 const NO_AI = process.env.INGEST_NO_AI === "1" || process.argv.includes("--no-ai");
+
+/** Decide whether a detected change auto-approves or goes to review (spec §10 step 11). */
+function decideStatus(settings: any, changeType: string, confidence: number | null): "pending" | "auto_approved" {
+  if (!settings?.enabled) return "pending";
+  if (settings.pricing_always_review && changeType === "pricing_change") return "pending";
+  if (!(settings.eligible_change_types ?? []).includes(changeType)) return "pending";
+  if ((confidence ?? 0) < Number(settings.min_confidence ?? 100)) return "pending";
+  return "auto_approved";
+}
 
 async function main() {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) throw new Error("Missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY");
-  if (!NO_AI && !process.env.ANTHROPIC_API_KEY) throw new Error("Missing ANTHROPIC_API_KEY (or run crawl-only with INGEST_NO_AI=1)");
+  if (!NO_AI && !process.env.GROQ_API_KEY) throw new Error("Missing GROQ_API_KEY (or run crawl-only with INGEST_NO_AI=1)");
 
   const db = createClient(url, key, { auth: { persistSession: false } });
+
+  // Auto-approval settings, cached per org.
+  const settingsCache = new Map<string, any>();
+  async function getSettings(orgId: string) {
+    if (!settingsCache.has(orgId)) {
+      const { data } = await db.from("auto_approval_settings").select("*").eq("organization_id", orgId).maybeSingle();
+      settingsCache.set(orgId, data ?? null);
+    }
+    return settingsCache.get(orgId);
+  }
 
   // Step 1 — Source scheduler: due, active sources by priority (product pages first).
   const { data: sources, error } = await db
@@ -39,7 +58,7 @@ async function main() {
     .limit(MAX_SOURCES);
   if (error) throw error;
 
-  const stats = { checked: 0, changed: 0, detections: 0, errors: 0, unchanged: 0 };
+  const stats = { checked: 0, changed: 0, detections: 0, autoApproved: 0, errors: 0, unchanged: 0 };
 
   for (const s of sources ?? []) {
     stats.checked++;
@@ -102,7 +121,10 @@ async function main() {
     // Step 6 — Structured extraction (Prompt 2).
     const extraction = await extractIntelligence(companyName, s.url, f.text);
 
-    // Steps 8-11 — Persist evidence + a PENDING change (no auto-approval in v1).
+    // Steps 9-11 — Confidence/significance are on the classification; decide review vs auto-approve.
+    const decision = decideStatus(await getSettings(s.organization_id), rel.change_type, rel.confidence_score);
+    const approved = decision === "auto_approved";
+
     const { data: obs } = await db
       .from("observations")
       .insert({
@@ -116,7 +138,7 @@ async function main() {
         confidence_score: rel.confidence_score,
         observed_at: now,
         extracted_by: `ai:${MODEL}`,
-        review_status: "pending",
+        review_status: approved ? "approved" : "pending",
       })
       .select("id")
       .single();
@@ -131,10 +153,12 @@ async function main() {
       significance_score: rel.significance_score,
       confidence_score: rel.confidence_score,
       detected_at: now,
-      status: "pending",
+      approved_at: approved ? now : null,
+      status: decision,
       summary: rel.explanation,
     });
     stats.detections++;
+    if (approved) stats.autoApproved++;
   }
 
   console.log(JSON.stringify({ mode: NO_AI ? "crawl-only" : "full", model: NO_AI ? null : MODEL, ...stats }));
