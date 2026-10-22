@@ -4,12 +4,9 @@ import { getCompanyProfile } from "@/lib/queries";
 import { createClient } from "@/lib/supabase/server";
 import { ScoreBadge, ConfidenceBadge, StatusChip, Pill } from "@/components/badges";
 import { ScoreBreakdown } from "@/components/ScoreBreakdown";
-import { addSource, updateSource, deleteSource, recrawlSource } from "./actions";
+import { addSource, updateSource, deleteSource, recrawlSource, enrichCompanyNow } from "./actions";
+import { fetchSourceNow } from "../../sources/actions";
 import { money, since } from "@/lib/format";
-import { EnrichPanel } from "./EnrichPanel";
-import { LinkedEvents } from '@/components/LinkedEvents';
-
-export const maxDuration = 60;
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -30,11 +27,24 @@ export default async function CompetitorProfile({ params }: { params: Promise<{ 
   const { data: { user } } = await supabase.auth.getUser();
   const { data: profile } = await supabase.from("users").select("role").eq("id", user!.id).maybeSingle();
   const canEdit = ["administrator", "analyst"].includes((profile as any)?.role);
+  const aiEnabled = !!process.env.GROQ_API_KEY;
 
   return (
     <div className="space-y-5">
-      <div>
+      <div className="flex items-center justify-between">
         <Link href="/competitors" className="text-sm text-blue-600 hover:underline">← Competitors</Link>
+        {canEdit && (aiEnabled ? (
+          <form action={enrichCompanyNow}>
+            <input type="hidden" name="companyId" value={company.id} />
+            <button className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-zinc-800">
+              Enrich now (AI)
+            </button>
+          </form>
+        ) : (
+          <span className="text-xs text-zinc-400" title="Set ANTHROPIC_API_KEY in Vercel to enable">
+            Enrich now · needs AI key
+          </span>
+        ))}
       </div>
 
       {/* Header */}
@@ -72,10 +82,6 @@ export default async function CompetitorProfile({ params }: { params: Promise<{ 
           </div>
         </div>
       </div>
-
-      <EnrichPanel companyId={company.id} canEdit={canEdit} configured={!!process.env.GROQ_API_KEY} />
-      <LinkedEvents field="organizer_company_id" id={company.id} />
-      {relationships.length > 0 && <Section title="Active internal portfolio relationships"><ul className="space-y-3">{relationships.map((r: any,i: number) => <li key={i} className="text-sm"><div className="font-medium">{r.internal_products?.name} · {r.relationship_type}</div>{r.products && <Link className="text-blue-700 hover:underline" href={`/products/${r.products.id}`}>{r.products.name}</Link>}{r.notes && <p className="mt-1 text-zinc-600">{r.notes}</p>}</li>)}</ul></Section>}
 
       {/* Score breakdown */}
       <Section title="Score Breakdown">
@@ -150,7 +156,7 @@ export default async function CompetitorProfile({ params }: { params: Promise<{ 
             <tbody>
               {products.map((p: any) => (
                 <tr key={p.id} className="border-b border-zinc-100">
-                  <td className="px-2 py-2 font-medium text-zinc-900"><Link href={`/products/${p.id}`} className="text-blue-700 hover:underline">{p.name}</Link></td>
+                  <td className="px-2 py-2 font-medium text-zinc-900">{p.name}</td>
                   <td className="px-2 py-2">{p.price ? money(p.price.price_min, p.price.price_max, p.price.currency) : "—"}</td>
                   <td className="px-2 py-2"><StatusChip status={p.intelligence_status} /></td>
                   <td className="px-2 py-2">
@@ -228,11 +234,18 @@ export default async function CompetitorProfile({ params }: { params: Promise<{ 
                       </div>
                       {s.status === "error" && s.last_error && <div className="text-xs text-red-600">{s.last_error}</div>}
                     </form>
-                    <div className="mt-2 flex gap-2">
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <form action={fetchSourceNow}>
+                        <input type="hidden" name="sourceId" value={s.id} />
+                        <input type="hidden" name="companyId" value={company.id} />
+                        <input type="hidden" name="goToSnapshot" value="1" />
+                        <button className="rounded-md bg-zinc-900 px-2 py-1 text-xs font-medium text-white hover:bg-zinc-800">Fetch now</button>
+                      </form>
+                      <Link href={`/sources/${s.id}`} className="rounded-md border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50">Snapshot</Link>
                       <form action={recrawlSource}>
                         <input type="hidden" name="id" value={s.id} />
                         <input type="hidden" name="companyId" value={company.id} />
-                        <button className="rounded-md border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50">Re-crawl</button>
+                        <button className="rounded-md border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50">Reset for crawl</button>
                       </form>
                       <form action={deleteSource}>
                         <input type="hidden" name="id" value={s.id} />
@@ -248,6 +261,7 @@ export default async function CompetitorProfile({ params }: { params: Promise<{ 
                     <Pill tone={tone}>{statusLabel}</Pill>
                     <span className="text-xs text-zinc-400">checked {since(s.last_checked_at)}</span>
                     {s.status === "error" && s.last_error && <span className="text-xs text-red-600">{s.last_error}</span>}
+                    <Link href={`/sources/${s.id}`} className="text-xs text-blue-600 hover:underline">Snapshot</Link>
                   </div>
                 )}
               </div>

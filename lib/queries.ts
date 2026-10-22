@@ -75,7 +75,7 @@ export async function listCompanies(search?: string): Promise<LandscapeRow[]> {
   let q = supabase
     .from("companies")
     .select(
-      "id, name, competitive_score, confidence_score, intelligence_status, last_material_change_at, last_verified_at, competitive_relationships(active,internal_products(name))"
+      "id, name, competitive_score, confidence_score, intelligence_status, last_material_change_at, last_verified_at, competitive_relationships(internal_products(name))"
     )
     .order("competitive_score", { ascending: false, nullsFirst: false })
     .order("confidence_score", { ascending: false, nullsFirst: false })
@@ -91,7 +91,7 @@ export async function listCompanies(search?: string): Promise<LandscapeRow[]> {
     intelligence_status: c.intelligence_status,
     last_material_change_at: c.last_material_change_at,
     last_verified_at: c.last_verified_at,
-    areas: toAreas((c.competitive_relationships ?? []).filter((r: any) => r.active)),
+    areas: toAreas(c.competitive_relationships),
   }));
 }
 
@@ -108,16 +108,15 @@ export async function getCompanyProfile(id: string) {
     supabase.from("products").select("*").eq("company_id", id).order("name"),
     supabase
       .from("competitive_relationships")
-      .select("relationship_type, notes, internal_products(name), products(id,name)")
-      .eq("competitor_company_id", id).eq("active", true),
+      .select("relationship_type, notes, internal_products(name)")
+      .eq("competitor_company_id", id),
     supabase.from("company_topics").select("topics(name)").eq("company_id", id),
     supabase.from("company_customers").select("customers(name)").eq("company_id", id),
     supabase
       .from("observations")
       .select("field_name, supporting_text")
       .eq("company_id", id)
-      .eq("observation_type", "positioning")
-      .in("review_status", ["approved", "auto_approved"]),
+      .eq("observation_type", "positioning"),
     supabase
       .from("competitive_scores")
       .select("total_score, explanation_json, calculated_at")
@@ -523,7 +522,7 @@ export async function askIntelligence(q: string): Promise<AskResult> {
   const caveat = "Answered from imported structured data (confidence 60, pending verification).";
   const { data: areas } = await supabase.from("internal_products").select("id, name");
   const areaList = (areas ?? []) as { id: string; name: string }[];
-  const foundAreas = areaList.map((a) => a.name).filter((n) => text.includes(n.toLowerCase())).sort((a,b) => b.length-a.length);
+  const foundAreas = areaList.map((a) => a.name).filter((n) => text.includes(n.toLowerCase()));
 
   // 1) Price threshold: "under $20,000"
   const priceMatch = text.match(/(?:under|below|less than|cheaper than)\s*\$?\s*([\d,]+)/);
@@ -712,5 +711,41 @@ export async function getProduct(id: string) {
     features: features.data ?? [],
     topics: (ptopics.data ?? []).map((t: any) => t.topics?.name).filter(Boolean),
     source,
+  };
+}
+
+// ---- Source snapshot (on-demand fetch preview) -----------------------------
+export async function getSourceSnapshot(id: string) {
+  const supabase = await createClient();
+  const { data: source } = await supabase
+    .from("company_sources")
+    .select("id, name, url, status, last_error, last_checked_at, company_id, companies(id, name), source_types(name)")
+    .eq("id", id)
+    .maybeSingle();
+  if (!source) return null;
+  const { data: doc } = await supabase
+    .from("source_documents")
+    .select("title, cleaned_text, metadata_json, fetched_at")
+    .eq("company_source_id", id)
+    .order("fetched_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return { source, doc };
+}
+
+// ---- Add / Import form options ----------------------------------------------
+export async function getAddFormOptions() {
+  const supabase = await createClient();
+  const [internal, ctypes, cats, companies] = await Promise.all([
+    supabase.from("internal_products").select("id, name").order("name"),
+    supabase.from("company_types").select("id, name").order("name"),
+    supabase.from("product_categories").select("id, name").order("name"),
+    supabase.from("companies").select("id, name").order("name").limit(1000),
+  ]);
+  return {
+    internalProducts: internal.data ?? [],
+    companyTypes: ctypes.data ?? [],
+    categories: cats.data ?? [],
+    companies: companies.data ?? [],
   };
 }

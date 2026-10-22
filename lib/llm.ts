@@ -1,32 +1,41 @@
-import "server-only";
+// Single LLM entry point for the web app. Points at Groq's OpenAI-compatible
+// Chat Completions API (free, hosted). Swap provider by changing the base URL +
+// key env; model is configurable via GROQ_MODEL.
+const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const DEFAULT_MODEL = "openai/gpt-oss-120b"; // llama-3.3-70b-versatile was retired by Groq
 
-export async function groqJSON(system: string, user: string): Promise<unknown> {
+export function llmEnabled(): boolean {
+  return !!process.env.GROQ_API_KEY;
+}
+
+export async function callLLM(opts: {
+  system: string;
+  user: string;
+  maxTokens?: number;
+  json?: boolean;
+}): Promise<string | null> {
   const key = process.env.GROQ_API_KEY;
-  if (!key) throw new Error("Add GROQ_API_KEY to your server environment, then redeploy.");
-  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    cache: "no-store",
-    signal: AbortSignal.timeout(30000),
-    headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
-    body: JSON.stringify({
-      model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
-      temperature: 0.2,
-      max_tokens: 2500,
-      response_format: { type: "json_object" },
-      messages: [{ role: "system", content: system }, { role: "user", content: user }],
-    }),
-  });
-  if (!response.ok) {
-    if (response.status === 401) throw new Error("Groq rejected the API key. Check GROQ_API_KEY in the server environment and redeploy.");
-    if (response.status === 429) throw new Error("Groq's usage limit was reached. Please try again later.");
-    if ([400, 404].includes(response.status)) throw new Error("Groq could not use the configured model. Check GROQ_MODEL in the server environment.");
-    throw new Error(`Groq is unavailable (HTTP ${response.status}). Please try again later.`);
+  if (!key) return null;
+  const model = process.env.GROQ_MODEL || DEFAULT_MODEL;
+  try {
+    const res = await fetch(GROQ_URL, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model,
+        temperature: 0.2,
+        max_tokens: opts.maxTokens ?? 1200,
+        ...(opts.json ? { response_format: { type: "json_object" } } : {}),
+        messages: [
+          { role: "system", content: opts.system },
+          { role: "user", content: opts.user },
+        ],
+      }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return (data?.choices?.[0]?.message?.content ?? "").trim() || null;
+  } catch {
+    return null;
   }
-  const body = await response.json();
-  const raw = body?.choices?.[0]?.message?.content;
-  if (typeof raw !== "string" || body?.choices?.[0]?.finish_reason === "length") {
-    throw new Error("Groq returned incomplete results. Please try again.");
-  }
-  try { return JSON.parse(raw.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "")); }
-  catch { throw new Error("Groq did not return valid structured results. Please try again."); }
 }

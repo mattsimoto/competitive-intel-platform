@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getAdminData } from "@/lib/queries";
-import { saveWeights, addTaxonomy, saveAutoApproval } from "./actions";
-import { MembershipPanel } from "@/components/MembershipPanel";
+import { saveWeights, setUserRole, addTaxonomy, saveAutoApproval } from "./actions";
 import { Pill } from "@/components/badges";
 
 const FACTOR_LABELS: Record<string, string> = {
@@ -42,10 +41,6 @@ export default async function AdminPage() {
   }
 
   const { weights, users, taxonomies, autoApproval } = await getAdminData();
-  const [{ data: invitations }, { data: audit }] = await Promise.all([
-    supabase.from("workspace_invitations").select("id,email,role,expires_at,revoked_at,accepted_at").order("created_at", { ascending: false }).limit(100),
-    supabase.from("membership_audit").select("id,action,created_at,actor_id,target_user_id,details").order("created_at", { ascending: false }).limit(30),
-  ]);
   const aa = autoApproval ?? { enabled: false, min_confidence: 85, eligible_change_types: [], pricing_always_review: true };
   const CHANGE_TYPES = [
     "product_launch", "product_removal", "pricing_change", "feature_change",
@@ -91,7 +86,35 @@ export default async function AdminPage() {
       </Section>
 
       <Section title={`Users (${users.length})`}>
-        <MembershipPanel users={users as any} invitations={invitations ?? []} audit={audit ?? []} />
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-zinc-200 text-left text-xs uppercase tracking-wide text-zinc-500">
+              <th className="py-2 font-medium">User</th>
+              <th className="py-2 font-medium">Role</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((u: any) => (
+              <tr key={u.id} className="border-b border-zinc-100">
+                <td className="py-2">
+                  <div className="font-medium text-zinc-900">{u.full_name ?? u.email}</div>
+                  <div className="text-xs text-zinc-500">{u.email}</div>
+                </td>
+                <td className="py-2">
+                  <form action={setUserRole} className="flex items-center gap-2">
+                    <input type="hidden" name="id" value={u.id} />
+                    <select name="role" defaultValue={u.role} className="rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm">
+                      <option value="administrator">Administrator</option>
+                      <option value="analyst">Analyst</option>
+                      <option value="viewer">Viewer</option>
+                    </select>
+                    <button className="rounded-md border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50">Update</button>
+                  </form>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </Section>
 
       <Section title="Taxonomies">
@@ -162,4 +185,3 @@ export default async function AdminPage() {
     </div>
   );
 }
-

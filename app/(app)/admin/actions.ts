@@ -22,6 +22,15 @@ export async function saveWeights(formData: FormData) {
   revalidatePath("/competitors");
 }
 
+export async function setUserRole(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  const role = String(formData.get("role") ?? "");
+  if (!id || !["administrator", "analyst", "viewer"].includes(role)) return;
+  const supabase = await createClient();
+  await supabase.from("users").update({ role }).eq("id", id);
+  revalidatePath("/admin");
+}
+
 export async function addTaxonomy(formData: FormData) {
   const table = String(formData.get("table") ?? "");
   const name = String(formData.get("name") ?? "").trim();
@@ -64,4 +73,3 @@ export async function saveAutoApproval(formData: FormData) {
   }, { onConflict: "organization_id" });
   revalidatePath("/admin");
 }
-

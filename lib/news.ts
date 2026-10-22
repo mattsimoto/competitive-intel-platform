@@ -46,7 +46,6 @@ function parseFeed(source: string, xml: string): NewsItem[] {
 
 /** Pull the latest items across all feeds, deduped and sorted newest-first. */
 export async function fetchLatestNews(limit = 20): Promise<NewsItem[]> {
-  if (process.env.ENABLE_NEWS_FETCH === "false") return [];
   const results = await Promise.all(
     FEEDS.map(async (f) => {
       try {
@@ -84,4 +83,3 @@ export function sourcesForPrompt(items: NewsItem[]): string {
     .map((i, n) => `${n + 1}. ${i.title} — ${i.source} (${i.date ?? "undated"})\n   ${i.link}`)
     .join("\n");
 }
-
