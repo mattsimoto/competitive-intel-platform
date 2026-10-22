@@ -14,7 +14,6 @@ const NAV = [
   { href: "/watchlists", label: "Watchlists" },
   { href: "/ask", label: "Ask Intelligence" },
   { href: "/add", label: "Add / Import", review: true },
-  { href: "/import", label: "Import", review: true },
   { href: "/review", label: "Review Queue", review: true },
   { href: "/admin", label: "Admin", admin: true },
 ];
