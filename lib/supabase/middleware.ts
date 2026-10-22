@@ -3,7 +3,22 @@ import { NextResponse, type NextRequest } from "next/server";
 
 type CookieToSet = { name: string; value: string; options?: Record<string, unknown> };
 
-/** Refreshes the auth session cookie and gates the app behind login. */
+/** How long we'll wait on the auth server before giving up. Supabase's auth
+ *  endpoint normally answers in well under a second; if it's slow or unreachable
+ *  we must not let the whole app hang (that caused a 504 MIDDLEWARE_INVOCATION_TIMEOUT). */
+const AUTH_TIMEOUT_MS = 3000;
+
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error("auth-timeout")), ms)),
+  ]);
+}
+
+/** Refreshes the auth session cookie and gates the app behind login.
+ *  Fails SAFE: if the auth server times out or errors, we let the request through
+ *  rather than 504-ing the page — the app layout re-checks auth authoritatively
+ *  (`if (!user) redirect("/login")`), so this stays secure. */
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -22,19 +37,32 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
   const path = request.nextUrl.pathname;
   const isPublic = path === "/login";
 
-  if (!user && !isPublic) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
+  let user: unknown = null;
+  let authReachable = true;
+  try {
+    const { data } = await withTimeout(supabase.auth.getUser(), AUTH_TIMEOUT_MS);
+    user = data.user;
+  } catch {
+    // Timed out or errored: don't hang, don't redirect-loop. Let it through and
+    // let the server component decide. A transient Supabase blip stays invisible.
+    authReachable = false;
   }
-  if (user && isPublic) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
+
+  if (authReachable) {
+    if (!user && !isPublic) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      return NextResponse.redirect(url);
+    }
+    if (user && isPublic) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
+    }
   }
+
   return response;
 }
