@@ -2,6 +2,7 @@ import { getCurrentUser, isAdminRole } from "@/lib/auth";
 import { getAdminData } from "@/lib/queries";
 import { saveWeights, setUserRole, addTaxonomy, saveAutoApproval } from "./actions";
 import { Pill } from "@/components/badges";
+import { SubmitButton } from "@/components/SubmitButton";
 
 const FACTOR_LABELS: Record<string, string> = {
   product_overlap: "Product Overlap",
@@ -69,9 +70,9 @@ export default async function AdminPage() {
             ))}
           </div>
           <div className="flex items-center gap-3">
-            <button className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
+            <SubmitButton pendingText="Saving…" className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
               Save &amp; recalculate
-            </button>
+            </SubmitButton>
             <span className={`text-sm ${total === 100 ? "text-zinc-500" : "text-red-600"}`}>
               Current total: {total} {total === 100 ? "" : "(must equal 100 to save)"}
             </span>
@@ -106,7 +107,7 @@ export default async function AdminPage() {
                       <option value="analyst">Analyst</option>
                       <option value="viewer">Viewer</option>
                     </select>
-                    <button className="rounded-md border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50">Update</button>
+                    <SubmitButton className="rounded-md border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50">Update</SubmitButton>
                   </form>
                 </td>
               </tr>
@@ -130,7 +131,7 @@ export default async function AdminPage() {
                   <input type="hidden" name="table" value={t.key} />
                   <input type="text" name="name" placeholder={`Add ${t.label.toLowerCase()}…`}
                     className="flex-1 rounded-md border border-zinc-300 px-2 py-1 text-sm outline-none focus:border-zinc-900" />
-                  <button className="rounded-md border border-zinc-300 px-2 py-1 text-sm hover:bg-zinc-50">Add</button>
+                  <SubmitButton className="rounded-md border border-zinc-300 px-2 py-1 text-sm hover:bg-zinc-50">Add</SubmitButton>
                 </form>
               </div>
             );
@@ -165,7 +166,7 @@ export default async function AdminPage() {
             <input type="checkbox" name="pricing_always_review" defaultChecked={aa.pricing_always_review} />
             <span className="text-zinc-700">Always review pricing changes (recommended)</span>
           </label>
-          <button className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">Save rules</button>
+          <SubmitButton pendingText="Saving…" className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">Save rules</SubmitButton>
         </form>
         <p className="mt-3 text-xs text-zinc-400">
           Applies to changes the ingestion pipeline detects (AI half). A change auto-approves only when

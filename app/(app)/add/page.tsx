@@ -2,6 +2,7 @@ import { getCurrentUser, canEditRole } from "@/lib/auth";
 import { getAddFormOptions } from "@/lib/queries";
 import { addCompetitor, addProduct, addEvent } from "./actions";
 import { ImportForm } from "./ImportForm";
+import { SubmitButton } from "@/components/SubmitButton";
 
 function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
@@ -51,7 +52,7 @@ export default async function AddPage() {
               {internalProducts.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select></label>
           <div className="flex items-end">
-            <button className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">Add competitor</button>
+            <SubmitButton pendingText="Adding…" className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">Add competitor</SubmitButton>
           </div>
         </form>
       </Section>
@@ -81,7 +82,7 @@ export default async function AddPage() {
           <label className="block text-sm sm:col-span-2"><span className="text-zinc-600">Description</span>
             <input name="description" className={field} /></label>
           <div className="flex items-end">
-            <button className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">Add product</button>
+            <SubmitButton pendingText="Adding…" className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">Add product</SubmitButton>
           </div>
         </form>
       </Section>
@@ -102,7 +103,7 @@ export default async function AddPage() {
           <label className="block text-sm sm:col-span-2"><span className="text-zinc-600">URL</span>
             <input name="event_url" type="url" placeholder="https://" className={field} /></label>
           <div className="flex items-end">
-            <button className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">Add event</button>
+            <SubmitButton pendingText="Adding…" className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">Add event</SubmitButton>
           </div>
         </form>
       </Section>

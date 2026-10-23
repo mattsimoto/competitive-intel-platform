@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getWatchlist, getPickerOptions } from "@/lib/queries";
 import { addWatchlistItem, removeWatchlistItem } from "../actions";
+import { SubmitButton } from "@/components/SubmitButton";
 import { Pill, ScoreBadge } from "@/components/badges";
 import { since } from "@/lib/format";
 
@@ -23,7 +24,7 @@ function AddForm({ watchlistId, type, options, label }: { watchlistId: string; t
         <option value="">{label}</option>
         {options.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
       </select>
-      <button className="rounded-md border border-zinc-300 px-3 py-1 text-sm hover:bg-zinc-50">Add</button>
+      <SubmitButton className="rounded-md border border-zinc-300 px-3 py-1 text-sm hover:bg-zinc-50">Add</SubmitButton>
     </form>
   );
 }
@@ -33,7 +34,7 @@ function RemoveBtn({ itemId, watchlistId }: { itemId: string; watchlistId: strin
     <form action={removeWatchlistItem} className="inline">
       <input type="hidden" name="itemId" value={itemId} />
       <input type="hidden" name="watchlistId" value={watchlistId} />
-      <button className="text-xs text-red-600 hover:underline">remove</button>
+      <SubmitButton className="text-xs text-red-600 hover:underline">remove</SubmitButton>
     </form>
   );
 }

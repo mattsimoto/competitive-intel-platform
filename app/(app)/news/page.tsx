@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getCurrentUser, canEditRole } from "@/lib/auth";
 import { listBriefs } from "@/lib/queries";
 import { generateBrief } from "./actions";
+import { SubmitButton } from "@/components/SubmitButton";
 import { Pill } from "@/components/badges";
 import { since } from "@/lib/format";
 
@@ -17,9 +18,9 @@ export default async function NewsPage() {
         <h1 className="text-xl font-semibold">Product News</h1>
         {canGenerate && (
           <form action={generateBrief}>
-            <button className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
+            <SubmitButton pendingText="Generating…" className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
               Generate brief
-            </button>
+            </SubmitButton>
           </form>
         )}
       </div>

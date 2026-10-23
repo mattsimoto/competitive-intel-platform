@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSourceSnapshot } from "@/lib/queries";
 import { fetchSourceNow } from "../actions";
+import { SubmitButton } from "@/components/SubmitButton";
 import { suggestPrices } from "@/lib/fetchPage";
 import { Pill } from "@/components/badges";
 import { since } from "@/lib/format";
@@ -39,7 +40,7 @@ export default async function SnapshotPage({ params }: { params: Promise<{ id: s
           <form action={fetchSourceNow}>
             <input type="hidden" name="sourceId" value={source.id} />
             <input type="hidden" name="companyId" value={source.company_id} />
-            <button className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">Fetch now</button>
+            <SubmitButton pendingText="Fetching…" className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">Fetch now</SubmitButton>
           </form>
         </div>
       </div>

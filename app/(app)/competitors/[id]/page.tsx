@@ -6,6 +6,7 @@ import { ScoreBadge, ConfidenceBadge, StatusChip, Pill } from "@/components/badg
 import { ScoreBreakdown } from "@/components/ScoreBreakdown";
 import { addSource, updateSource, deleteSource, recrawlSource, enrichCompanyNow } from "./actions";
 import { fetchSourceNow } from "../../sources/actions";
+import { SubmitButton } from "@/components/SubmitButton";
 import { money, since } from "@/lib/format";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -34,9 +35,9 @@ export default async function CompetitorProfile({ params }: { params: Promise<{ 
         {canEdit && (aiEnabled ? (
           <form action={enrichCompanyNow}>
             <input type="hidden" name="companyId" value={company.id} />
-            <button className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-zinc-800">
+            <SubmitButton pendingText="Enriching…" className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-zinc-800">
               Enrich now (AI)
-            </button>
+            </SubmitButton>
           </form>
         ) : (
           <span className="text-xs text-zinc-400" title="Set ANTHROPIC_API_KEY in Vercel to enable">
@@ -228,7 +229,7 @@ export default async function CompetitorProfile({ params }: { params: Promise<{ 
                           <input type="checkbox" name="active" defaultChecked={s.active} /> Active
                         </label>
                         <span className="text-xs text-zinc-400">checked {since(s.last_checked_at)}</span>
-                        <button className="rounded-md bg-zinc-900 px-3 py-1 text-xs font-medium text-white hover:bg-zinc-800">Save</button>
+                        <SubmitButton pendingText="Saving…" className="rounded-md bg-zinc-900 px-3 py-1 text-xs font-medium text-white hover:bg-zinc-800">Save</SubmitButton>
                       </div>
                       {s.status === "error" && s.last_error && <div className="text-xs text-red-600">{s.last_error}</div>}
                     </form>
@@ -237,18 +238,18 @@ export default async function CompetitorProfile({ params }: { params: Promise<{ 
                         <input type="hidden" name="sourceId" value={s.id} />
                         <input type="hidden" name="companyId" value={company.id} />
                         <input type="hidden" name="goToSnapshot" value="1" />
-                        <button className="rounded-md bg-zinc-900 px-2 py-1 text-xs font-medium text-white hover:bg-zinc-800">Fetch now</button>
+                        <SubmitButton pendingText="Fetching…" className="rounded-md bg-zinc-900 px-2 py-1 text-xs font-medium text-white hover:bg-zinc-800">Fetch now</SubmitButton>
                       </form>
                       <Link href={`/sources/${s.id}`} className="rounded-md border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50">Snapshot</Link>
                       <form action={recrawlSource}>
                         <input type="hidden" name="id" value={s.id} />
                         <input type="hidden" name="companyId" value={company.id} />
-                        <button className="rounded-md border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50">Reset for crawl</button>
+                        <SubmitButton className="rounded-md border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50">Reset for crawl</SubmitButton>
                       </form>
                       <form action={deleteSource}>
                         <input type="hidden" name="id" value={s.id} />
                         <input type="hidden" name="companyId" value={company.id} />
-                        <button className="rounded-md border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-50">Delete</button>
+                        <SubmitButton className="rounded-md border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-50">Delete</SubmitButton>
                       </form>
                     </div>
                   </>
@@ -277,7 +278,7 @@ export default async function CompetitorProfile({ params }: { params: Promise<{ 
               <option value="">Type…</option>
               {sourceTypes.map((t: any) => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
-            <button className="rounded-md border border-zinc-300 px-3 py-1 text-sm hover:bg-zinc-50">Add source</button>
+            <SubmitButton pendingText="Adding…" className="rounded-md border border-zinc-300 px-3 py-1 text-sm hover:bg-zinc-50">Add source</SubmitButton>
           </form>
         )}
 

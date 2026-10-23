@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getCurrentUser, canReviewRole } from "@/lib/auth";
 import { listPendingChanges, type ReviewItem } from "@/lib/queries";
 import { reviewAction, bulkReview } from "./actions";
+import { SubmitButton } from "@/components/SubmitButton";
 import { Pill } from "@/components/badges";
 import { since } from "@/lib/format";
 
@@ -17,12 +18,12 @@ function ActionButton({
     <form action={reviewAction}>
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="action" value={action} />
-      <button
-        type="submit" disabled={disabled}
+      <SubmitButton
+        disabled={disabled}
         className={`rounded-md px-3 py-1.5 text-sm font-medium disabled:opacity-40 ${tones[tone]}`}
       >
         {label}
-      </button>
+      </SubmitButton>
     </form>
   );
 }
@@ -106,12 +107,12 @@ export default async function ReviewQueuePage() {
       {canReview && items.length > 0 && (
         <form id="bulk" action={bulkReview} className="flex items-center gap-2 rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm">
           <span className="text-zinc-500">With selected:</span>
-          <button name="bulkAction" value="approve" className="rounded-md bg-green-600 px-3 py-1.5 font-medium text-white hover:bg-green-700">
+          <SubmitButton name="bulkAction" value="approve" pendingText="Working…" className="rounded-md bg-green-600 px-3 py-1.5 font-medium text-white hover:bg-green-700">
             Approve selected
-          </button>
-          <button name="bulkAction" value="reject" className="rounded-md border border-red-300 px-3 py-1.5 font-medium text-red-700 hover:bg-red-50">
+          </SubmitButton>
+          <SubmitButton name="bulkAction" value="reject" pendingText="Working…" className="rounded-md border border-red-300 px-3 py-1.5 font-medium text-red-700 hover:bg-red-50">
             Reject selected
-          </button>
+          </SubmitButton>
           <span className="text-xs text-zinc-400">Tick the boxes on the items below, then choose an action.</span>
         </form>
       )}
