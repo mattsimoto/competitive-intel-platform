@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { getEvent, listEvents } from '@/lib/eventQueries';
 import { craDateOverlaps, eventDate, isConfirmed, safeEventURL } from '@/lib/events';
 import { createClient } from '@/lib/supabase/server';
+import { getCurrentUser, canEditRole } from '@/lib/auth';
 import { ComparisonForm, MatchForm, OwnerForm } from './ReviewForms';
 function Source({url,label}:{url:unknown;label?:string}) { const href=safeEventURL(url); return href ? <a href={href} target="_blank" rel="noreferrer" className="break-all text-sm text-blue-700 hover:underline">{label || href}</a> : <span className="text-sm text-zinc-500">No source recorded</span>; }
 function Section({title,children}:{title:string;children:React.ReactNode}) {return <section className="rounded-xl border border-zinc-200 bg-white p-5"><h2 className="mb-3 font-semibold">{title}</h2>{children}</section>;}
@@ -11,9 +12,8 @@ export default async function EventDetail({params}:{params:Promise<{id:string}>}
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const event=await getEvent(id); if(!event) notFound();
   const db=await createClient();
-  const {data:{user}}=await db.auth.getUser();
-  const {data:profile}=user ? await db.from('users').select('role,active').eq('id',user.id).single() : {data:null};
-  const canEdit=!!profile?.active && ['administrator','analyst'].includes(profile.role);
+  const me=await getCurrentUser();
+  const canEdit=me?.active===true && canEditRole(me.role);
   const [companies,portfolio,history,allEvents,parent] = await Promise.all([
     canEdit && event.organizer_status==='pending' ? db.from('companies').select('id,name').order('name').limit(1000) : Promise.resolve({data:[]}),
     db.from('internal_products').select('id,name').eq('active',true).order('name'),

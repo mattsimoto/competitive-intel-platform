@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCompanyProfile } from "@/lib/queries";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser, canEditRole } from "@/lib/auth";
 import { ScoreBadge, ConfidenceBadge, StatusChip, Pill } from "@/components/badges";
 import { ScoreBreakdown } from "@/components/ScoreBreakdown";
 import { addSource, updateSource, deleteSource, recrawlSource, enrichCompanyNow } from "./actions";
@@ -23,10 +23,8 @@ export default async function CompetitorProfile({ params }: { params: Promise<{ 
   if (!data) notFound();
   const { company, products, areas, relationships, topics, customers, strengths, weaknesses, score, sources, sourceTypes } = data;
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data: profile } = await supabase.from("users").select("role").eq("id", user!.id).maybeSingle();
-  const canEdit = ["administrator", "analyst"].includes((profile as any)?.role);
+  const me = await getCurrentUser();
+  const canEdit = canEditRole(me?.role ?? null);
   const aiEnabled = !!process.env.GROQ_API_KEY;
 
   return (

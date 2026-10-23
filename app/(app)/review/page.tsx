@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser, canReviewRole } from "@/lib/auth";
 import { listPendingChanges, type ReviewItem } from "@/lib/queries";
 import { reviewAction, bulkReview } from "./actions";
 import { Pill } from "@/components/badges";
@@ -85,10 +85,8 @@ function Card({ item, canReview }: { item: ReviewItem; canReview: boolean }) {
 }
 
 export default async function ReviewQueuePage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data: profile } = await supabase.from("users").select("role").eq("id", user!.id).maybeSingle();
-  const canReview = (profile as any)?.role === "administrator" || (profile as any)?.role === "analyst";
+  const me = await getCurrentUser();
+  const canReview = canReviewRole(me?.role ?? null);
 
   const items = await listPendingChanges();
 

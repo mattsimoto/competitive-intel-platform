@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser, isAdminRole } from "@/lib/auth";
 import { getAdminData } from "@/lib/queries";
 import { saveWeights, setUserRole, addTaxonomy, saveAutoApproval } from "./actions";
 import { Pill } from "@/components/badges";
@@ -33,10 +33,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 export default async function AdminPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data: profile } = await supabase.from("users").select("role").eq("id", user!.id).maybeSingle();
-  if ((profile as any)?.role !== "administrator") {
+  const me = await getCurrentUser();
+  if (!isAdminRole(me?.role ?? null)) {
     return <p className="text-sm text-zinc-500">Administrators only.</p>;
   }
 

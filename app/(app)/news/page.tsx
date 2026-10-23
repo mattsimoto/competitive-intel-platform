@@ -1,15 +1,13 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser, canEditRole } from "@/lib/auth";
 import { listBriefs } from "@/lib/queries";
 import { generateBrief } from "./actions";
 import { Pill } from "@/components/badges";
 import { since } from "@/lib/format";
 
 export default async function NewsPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data: profile } = await supabase.from("users").select("role").eq("id", user!.id).maybeSingle();
-  const canGenerate = ["administrator", "analyst"].includes((profile as any)?.role);
+  const me = await getCurrentUser();
+  const canGenerate = canEditRole(me?.role ?? null);
 
   const briefs = await listBriefs();
 

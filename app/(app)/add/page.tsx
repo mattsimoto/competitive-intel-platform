@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser, canEditRole } from "@/lib/auth";
 import { getAddFormOptions } from "@/lib/queries";
 import { addCompetitor, addProduct, addEvent } from "./actions";
 import { ImportForm } from "./ImportForm";
@@ -18,10 +18,8 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
 const field = "mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-900";
 
 export default async function AddPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data: profile } = await supabase.from("users").select("role").eq("id", user!.id).maybeSingle();
-  const canEdit = ["administrator", "analyst"].includes((profile as any)?.role);
+  const me = await getCurrentUser();
+  const canEdit = canEditRole(me?.role ?? null);
   if (!canEdit) return <p className="text-sm text-zinc-500">Analysts and administrators only.</p>;
 
   const { internalProducts, companyTypes, categories, companies } = await getAddFormOptions();
