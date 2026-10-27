@@ -479,6 +479,22 @@ export async function getAdminData() {
   };
 }
 
+/** Pending/past invitations and recent access history for the Team panel.
+ *  RLS restricts both tables to administrators of the caller's org. */
+export async function getWorkspaceMembership() {
+  const supabase = await createClient();
+  const [invitations, audit] = await Promise.all([
+    supabase.from("workspace_invitations")
+      .select("id, email, role, expires_at, revoked_at, accepted_at")
+      .order("created_at", { ascending: false }),
+    supabase.from("membership_audit")
+      .select("id, action, created_at, actor_id, target_user_id, details")
+      .order("created_at", { ascending: false })
+      .limit(20),
+  ]);
+  return { invitations: invitations.data ?? [], audit: audit.data ?? [] };
+}
+
 // ---- Ask Intelligence (deterministic structured query) ---------------------
 export interface AskRecord { label: string; sublabel?: string; href?: string }
 export interface AskResult { intent: string; summary: string; records: AskRecord[]; caveat?: string }

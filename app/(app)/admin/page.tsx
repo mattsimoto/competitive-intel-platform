@@ -1,8 +1,9 @@
 import { getCurrentUser, isAdminRole } from "@/lib/auth";
-import { getAdminData } from "@/lib/queries";
-import { saveWeights, setUserRole, addTaxonomy, saveAutoApproval } from "./actions";
+import { getAdminData, getWorkspaceMembership } from "@/lib/queries";
+import { saveWeights, addTaxonomy, saveAutoApproval } from "./actions";
 import { Pill } from "@/components/badges";
 import { SubmitButton } from "@/components/SubmitButton";
+import { MembershipPanel } from "@/components/MembershipPanel";
 
 const FACTOR_LABELS: Record<string, string> = {
   product_overlap: "Product Overlap",
@@ -40,6 +41,7 @@ export default async function AdminPage() {
   }
 
   const { weights, users, taxonomies, autoApproval } = await getAdminData();
+  const { invitations, audit } = await getWorkspaceMembership();
   const aa = autoApproval ?? { enabled: false, min_confidence: 85, eligible_change_types: [], pricing_always_review: true };
   const CHANGE_TYPES = [
     "product_launch", "product_removal", "pricing_change", "feature_change",
@@ -84,36 +86,8 @@ export default async function AdminPage() {
         </p>
       </Section>
 
-      <Section title={`Users (${users.length})`}>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-zinc-200 text-left text-xs uppercase tracking-wide text-zinc-500">
-              <th className="py-2 font-medium">User</th>
-              <th className="py-2 font-medium">Role</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u: any) => (
-              <tr key={u.id} className="border-b border-zinc-100">
-                <td className="py-2">
-                  <div className="font-medium text-zinc-900">{u.full_name ?? u.email}</div>
-                  <div className="text-xs text-zinc-500">{u.email}</div>
-                </td>
-                <td className="py-2">
-                  <form action={setUserRole} className="flex items-center gap-2">
-                    <input type="hidden" name="id" value={u.id} />
-                    <select name="role" defaultValue={u.role} className="rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm">
-                      <option value="administrator">Administrator</option>
-                      <option value="analyst">Analyst</option>
-                      <option value="viewer">Viewer</option>
-                    </select>
-                    <SubmitButton className="rounded-md border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50">Update</SubmitButton>
-                  </form>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <Section title={`Team & Access (${users.length})`}>
+        <MembershipPanel users={users} invitations={invitations} audit={audit} />
       </Section>
 
       <Section title="Taxonomies">
