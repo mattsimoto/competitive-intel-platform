@@ -1,11 +1,33 @@
 'use client';
 import Link from 'next/link';
 import { useState } from 'react';
-import { craDateOverlaps, eventDate, eventsCSV, filterEvents, isConfirmed, type EventFilters, type IndustryEvent } from '@/lib/events';
+import { craDateOverlaps, eventDate, filterEvents, isConfirmed, type EventFilters, type IndustryEvent } from '@/lib/events';
+import { ExportDialog } from '@/components/ExportDialog';
 
 const empty: EventFilters = { search: '', region: '', scope: '', dates: '', owner: '', portfolio: '', review: '', month: '', overlaps: false };
 const input = 'rounded-md border border-zinc-300 bg-white p-2 text-sm';
 type Lens = 'competitors' | 'ours' | 'overlay';
+
+const EXPORT_COLUMNS = [
+  { key: 'name', label: 'Event' },
+  { key: 'start', label: 'Start' },
+  { key: 'end', label: 'End' },
+  { key: 'date_status', label: 'Date status (imported)' },
+  { key: 'city', label: 'City' },
+  { key: 'country', label: 'Country' },
+  { key: 'region', label: 'Region' },
+  { key: 'scope', label: 'Scope' },
+  { key: 'organizer', label: 'Organizer' },
+  { key: 'ownership', label: 'Ownership status' },
+  { key: 'evidence', label: 'Ownership evidence' },
+  { key: 'comparisons', label: 'Portfolio comparisons' },
+  { key: 'attendance', label: 'Attendance (imported)' },
+  { key: 'attendance_basis', label: 'Attendance basis' },
+  { key: 'reg_pricing', label: 'Registration pricing (imported)' },
+  { key: 'spon_pricing', label: 'Sponsorship pricing (imported)' },
+  { key: 'website', label: 'Website' },
+  { key: 'row', label: 'Workbook row' },
+];
 
 export function EventExplorer({ events, portfolio }: { events: IndustryEvent[]; portfolio: { id: string; name: string }[] }) {
   const [lens, setLens] = useState<Lens>('competitors');
@@ -33,11 +55,26 @@ export function EventExplorer({ events, portfolio }: { events: IndustryEvent[]; 
   };
   const conflictDays = Array.from({ length: days }, (_, i) => `${month}-${String(i + 1).padStart(2, '0')}`).filter(dayHasBoth).length;
 
-  function download() {
-    const blob = new Blob(['﻿' + eventsCSV(rows)], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'events.csv'; a.click(); URL.revokeObjectURL(url);
-  }
+  const exportRows = rows.map(e => ({
+    name: e.name,
+    start: e.start_date,
+    end: e.end_date,
+    date_status: e.date_status,
+    city: e.city,
+    country: e.country,
+    region: e.region,
+    scope: e.scope,
+    organizer: e.organizer_name,
+    ownership: e.organizer_status,
+    evidence: e.owner_evidence_url,
+    comparisons: e.event_portfolio_matches.map(m => `${m.internal_products?.name}: ${m.relationship_type} (${m.review_status})`).join('; '),
+    attendance: e.raw_fields['Estimated Attendance'] ?? '',
+    attendance_basis: e.raw_fields['Attendance Estimate Basis'] ?? '',
+    reg_pricing: e.raw_fields['Attendance / Registration Pricing'] ?? '',
+    spon_pricing: e.raw_fields['Sponsorship / Exhibitor Pricing'] ?? '',
+    website: e.website_url,
+    row: e.source_row,
+  }));
   function card(e: IndustryEvent, compact = false) {
     const comparisons = e.event_portfolio_matches.filter(m => m.review_status !== 'rejected');
     const overlaps = craDateOverlaps(e, events);
@@ -67,7 +104,7 @@ export function EventExplorer({ events, portfolio }: { events: IndustryEvent[]; 
   return <div className="space-y-5">
     <div className="flex flex-wrap justify-between gap-3">
       <div><h1 className="text-2xl font-semibold">Events</h1><p className="mt-1 text-sm text-zinc-600">Competitor events, our own CyberRisk Alliance events, and a calendar overlay to spot scheduling conflicts.</p></div>
-      <button onClick={download} className={input}>Export filtered CSV</button>
+      <ExportDialog filename="events" columns={EXPORT_COLUMNS} rows={exportRows} label="Export…" className={input} />
     </div>
 
     {/* Primary lens: our events vs competitor events vs overlay */}
