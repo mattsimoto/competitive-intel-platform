@@ -4,6 +4,7 @@ import { getCompanyProfile } from "@/lib/queries";
 import { getCurrentUser, canEditRole } from "@/lib/auth";
 import { ScoreBadge, ConfidenceBadge, StatusChip, Pill } from "@/components/badges";
 import { ScoreBreakdown } from "@/components/ScoreBreakdown";
+import { LinkedEvents } from "@/components/LinkedEvents";
 import { addSource, updateSource, deleteSource, recrawlSource, enrichCompanyNow } from "./actions";
 import { fetchSourceNow } from "../../sources/actions";
 import { SubmitButton } from "@/components/SubmitButton";
@@ -199,6 +200,9 @@ export default async function CompetitorProfile({ params }: { params: Promise<{ 
           {data.pricing.length === 0 && <p className="py-4 text-sm text-zinc-400">No pricing on file.</p>}
         </div>
       </Section>
+
+      {/* Industry events organized by / linked to this competitor (self-hides when none) */}
+      <LinkedEvents field="organizer_company_id" id={company.id} />
 
       {/* Sources */}
       <Section title={`Sources (${sources.length})`}>
