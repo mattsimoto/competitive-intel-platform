@@ -2,6 +2,22 @@ import Link from "next/link";
 import { listPricing } from "@/lib/queries";
 import { ConfidenceBadge, Pill } from "@/components/badges";
 import { money, since } from "@/lib/format";
+import { ExportDialog } from "@/components/ExportDialog";
+
+const EXPORT_COLUMNS = [
+  { key: "company", label: "Company" },
+  { key: "product", label: "Product" },
+  { key: "current_min", label: "Current Min" },
+  { key: "current_max", label: "Current Max" },
+  { key: "currency", label: "Currency" },
+  { key: "unit", label: "Unit" },
+  { key: "previous_min", label: "Previous Min" },
+  { key: "previous_max", label: "Previous Max" },
+  { key: "change_pct", label: "Change %" },
+  { key: "observed", label: "Observed" },
+  { key: "confidence", label: "Confidence" },
+  { key: "source_text", label: "Source Text" },
+];
 
 export default async function PricingPage({
   searchParams,
@@ -11,11 +27,29 @@ export default async function PricingPage({
   const { search } = await searchParams;
   const rows = await listPricing(search);
 
+  const exportRows = rows.map((r) => ({
+    company: r.company?.name ?? "",
+    product: r.productName,
+    current_min: r.current.min,
+    current_max: r.current.max,
+    currency: r.current.currency ?? "USD",
+    unit: r.current.unit ?? "",
+    previous_min: r.previous?.min ?? "",
+    previous_max: r.previous?.max ?? "",
+    change_pct: r.changePct ?? "",
+    observed: r.observedAt,
+    confidence: r.confidence,
+    source_text: r.rawText ?? "",
+  }));
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Pricing</h1>
-        <span className="text-sm text-zinc-500">{rows.length} priced offerings</span>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-zinc-500">{rows.length} priced offerings</span>
+          <ExportDialog filename="pricing" columns={EXPORT_COLUMNS} rows={exportRows} />
+        </div>
       </div>
 
       <form method="get" className="flex gap-2">

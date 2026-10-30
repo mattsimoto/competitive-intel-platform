@@ -1,16 +1,38 @@
 import Link from "next/link";
 import { listTopics } from "@/lib/queries";
 import { since } from "@/lib/format";
+import { ExportDialog } from "@/components/ExportDialog";
+
+const EXPORT_COLUMNS = [
+  { key: "name", label: "Topic" },
+  { key: "active_competitors", label: "Active Competitors" },
+  { key: "new_30", label: "New (30d)" },
+  { key: "new_90", label: "New (90d)" },
+  { key: "active_products", label: "Active Products" },
+  { key: "recent_activity", label: "Recent Activity" },
+];
 
 export default async function TopicsPage() {
   const topics = await listTopics();
   const anyData = topics.some((t) => t.activeCompetitors > 0 || t.activeProducts > 0);
 
+  const exportRows = topics.map((t) => ({
+    name: t.name,
+    active_competitors: t.activeCompetitors,
+    new_30: t.newEntrants30,
+    new_90: t.newEntrants90,
+    active_products: t.activeProducts,
+    recent_activity: t.recentActivity,
+  }));
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Markets &amp; Topics</h1>
-        <span className="text-sm text-zinc-500">{topics.length} topics</span>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-zinc-500">{topics.length} topics</span>
+          <ExportDialog filename="topics" columns={EXPORT_COLUMNS} rows={exportRows} />
+        </div>
       </div>
 
       {!anyData && (

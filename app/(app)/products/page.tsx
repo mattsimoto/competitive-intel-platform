@@ -2,6 +2,20 @@ import Link from "next/link";
 import { listProducts } from "@/lib/queries";
 import { ScoreBadge, ConfidenceBadge, Pill } from "@/components/badges";
 import { money } from "@/lib/format";
+import { ExportDialog } from "@/components/ExportDialog";
+
+const EXPORT_COLUMNS = [
+  { key: "name", label: "Product" },
+  { key: "company", label: "Company" },
+  { key: "url", label: "Product URL" },
+  { key: "source", label: "Source Status" },
+  { key: "price_min", label: "Price Min" },
+  { key: "price_max", label: "Price Max" },
+  { key: "currency", label: "Currency" },
+  { key: "unit", label: "Price Unit" },
+  { key: "company_score", label: "Company Score" },
+  { key: "confidence", label: "Confidence" },
+];
 
 function SourceBadge({ status, error }: { status: string | null; error: string | null }) {
   if (status === "ok") return <Pill tone="green">Live</Pill>;
@@ -17,11 +31,27 @@ export default async function ProductsPage({
   const { search, view = "all" } = await searchParams;
   const products = await listProducts(search, view);
 
+  const exportRows = products.map((p) => ({
+    name: p.name,
+    company: p.company?.name ?? "",
+    url: p.product_url ?? "",
+    source: p.sourceStatus ?? "uncrawled",
+    price_min: p.price?.min ?? "",
+    price_max: p.price?.max ?? "",
+    currency: p.price?.currency ?? "",
+    unit: p.price?.unit ?? "",
+    company_score: p.companyScore,
+    confidence: p.confidence_score,
+  }));
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Products</h1>
-        <span className="text-sm text-zinc-500">{products.length} shown</span>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-zinc-500">{products.length} shown</span>
+          <ExportDialog filename="products" columns={EXPORT_COLUMNS} rows={exportRows} />
+        </div>
       </div>
 
       <form method="get" className="flex flex-wrap gap-2">

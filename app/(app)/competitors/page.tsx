@@ -2,6 +2,16 @@ import Link from "next/link";
 import { listCompanies } from "@/lib/queries";
 import { ScoreBadge, ConfidenceBadge, StatusChip, Pill } from "@/components/badges";
 import { since } from "@/lib/format";
+import { ExportDialog } from "@/components/ExportDialog";
+
+const EXPORT_COLUMNS = [
+  { key: "name", label: "Company" },
+  { key: "score", label: "Competitive Score" },
+  { key: "confidence", label: "Confidence" },
+  { key: "status", label: "Status" },
+  { key: "areas", label: "Competitive Areas" },
+  { key: "last_verified", label: "Last Verified" },
+];
 
 export default async function CompetitorsPage({
   searchParams,
@@ -11,11 +21,23 @@ export default async function CompetitorsPage({
   const { search } = await searchParams;
   const companies = await listCompanies(search);
 
+  const exportRows = companies.map((c) => ({
+    name: c.name,
+    score: c.competitive_score,
+    confidence: c.confidence_score,
+    status: c.intelligence_status,
+    areas: c.areas.join("; "),
+    last_verified: c.last_verified_at,
+  }));
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Competitors</h1>
-        <span className="text-sm text-zinc-500">{companies.length} shown</span>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-zinc-500">{companies.length} shown</span>
+          <ExportDialog filename="competitors" columns={EXPORT_COLUMNS} rows={exportRows} />
+        </div>
       </div>
 
       <form method="get" className="flex gap-2">
