@@ -5,6 +5,14 @@ import { generateBrief } from "./actions";
 import { SubmitButton } from "@/components/SubmitButton";
 import { Pill } from "@/components/badges";
 import { since } from "@/lib/format";
+import { ExportDialog } from "@/components/ExportDialog";
+
+const EXPORT_COLUMNS = [
+  { key: "title", label: "Title" },
+  { key: "kind", label: "Kind" },
+  { key: "source_count", label: "Sources" },
+  { key: "generated_at", label: "Generated" },
+];
 
 export default async function NewsPage() {
   const me = await getCurrentUser();
@@ -12,17 +20,27 @@ export default async function NewsPage() {
 
   const briefs = await listBriefs();
 
+  const exportRows = briefs.map((b) => ({
+    title: b.title,
+    kind: b.kind === "ai" ? "Analyzed" : "Headlines",
+    source_count: b.source_count ?? "",
+    generated_at: b.generated_at,
+  }));
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Product News</h1>
-        {canGenerate && (
-          <form action={generateBrief}>
-            <SubmitButton pendingText="Generating…" className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
-              Generate brief
-            </SubmitButton>
-          </form>
-        )}
+        <div className="flex items-center gap-3">
+          <ExportDialog filename="product-news" columns={EXPORT_COLUMNS} rows={exportRows} />
+          {canGenerate && (
+            <form action={generateBrief}>
+              <SubmitButton pendingText="Generating…" className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
+                Generate brief
+              </SubmitButton>
+            </form>
+          )}
+        </div>
       </div>
 
       <p className="text-sm text-zinc-500">

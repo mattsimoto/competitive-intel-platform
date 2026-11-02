@@ -2,6 +2,18 @@ import Link from "next/link";
 import { listActivity } from "@/lib/queries";
 import { Pill } from "@/components/badges";
 import { since } from "@/lib/format";
+import { ExportDialog } from "@/components/ExportDialog";
+
+const EXPORT_COLUMNS = [
+  { key: "company", label: "Company" },
+  { key: "change_type", label: "Change Type" },
+  { key: "status", label: "Status" },
+  { key: "significance", label: "Significance" },
+  { key: "confidence", label: "Confidence" },
+  { key: "detected_at", label: "Detected" },
+  { key: "summary", label: "Summary" },
+  { key: "source_url", label: "Source URL" },
+];
 
 const STATUSES = ["all", "pending", "approved", "rejected", "deferred", "auto_approved"];
 const CHANGE_TYPES = [
@@ -27,11 +39,25 @@ export default async function ActivityPage({
   const { status = "all", type = "all" } = await searchParams;
   const rows = await listActivity({ status, changeType: type });
 
+  const exportRows = rows.map((r) => ({
+    company: r.company?.name ?? "",
+    change_type: r.change_type,
+    status: r.status,
+    significance: r.significance_score ?? "",
+    confidence: r.confidence_score ?? "",
+    detected_at: r.detected_at,
+    summary: r.summary ?? "",
+    source_url: r.source_url ?? "",
+  }));
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Activity</h1>
-        <span className="text-sm text-zinc-500">{rows.length} shown{rows.length === 200 ? "+" : ""}</span>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-zinc-500">{rows.length} shown{rows.length === 200 ? "+" : ""}</span>
+          <ExportDialog filename="activity" columns={EXPORT_COLUMNS} rows={exportRows} />
+        </div>
       </div>
 
       <form method="get" className="flex flex-wrap items-center gap-2">

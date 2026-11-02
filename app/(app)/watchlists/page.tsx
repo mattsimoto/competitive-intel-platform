@@ -3,13 +3,29 @@ import { listWatchlists } from "@/lib/queries";
 import { createWatchlist, deleteWatchlist } from "./actions";
 import { SubmitButton } from "@/components/SubmitButton";
 import { Pill } from "@/components/badges";
+import { ExportDialog } from "@/components/ExportDialog";
+
+const EXPORT_COLUMNS = [
+  { key: "name", label: "Watchlist" },
+  { key: "shared", label: "Shared" },
+  { key: "items", label: "Items" },
+];
 
 export default async function WatchlistsPage() {
   const watchlists = await listWatchlists();
 
+  const exportRows = watchlists.map((w) => ({
+    name: w.name,
+    shared: w.shared ? "Yes" : "No",
+    items: w.itemCount,
+  }));
+
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Watchlists</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold">Watchlists</h1>
+        <ExportDialog filename="watchlists" columns={EXPORT_COLUMNS} rows={exportRows} />
+      </div>
 
       <form action={createWatchlist} className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-200 bg-white p-4">
         <input type="text" name="name" required placeholder="New watchlist name…"
