@@ -77,6 +77,7 @@ export async function listCompanies(search?: string): Promise<LandscapeRow[]> {
     .select(
       "id, name, competitive_score, confidence_score, intelligence_status, last_material_change_at, last_verified_at, competitive_relationships(internal_products(name))"
     )
+    .neq("status", "archived")
     .order("competitive_score", { ascending: false, nullsFirst: false })
     .order("confidence_score", { ascending: false, nullsFirst: false })
     .order("name", { ascending: true })
