@@ -1,5 +1,6 @@
 // Server-side news retrieval for Product News briefs. Pulls reputable
 // cybersecurity news feeds (no API key needed) and returns dated, linked items.
+import { browserHeaders, FEED_ACCEPT } from "@/lib/browserHeaders";
 
 const FEEDS: { source: string; url: string }[] = [
   { source: "The Hacker News", url: "https://feeds.feedburner.com/TheHackersNews" },
@@ -51,7 +52,7 @@ export async function fetchLatestNews(limit = 20): Promise<NewsItem[]> {
       try {
         const ctrl = new AbortController();
         const t = setTimeout(() => ctrl.abort(), 12000);
-        const res = await fetch(f.url, { headers: { "user-agent": "CompetitiveIntelBot/0.1 (+news)" }, signal: ctrl.signal });
+        const res = await fetch(f.url, { headers: browserHeaders(FEED_ACCEPT), signal: ctrl.signal });
         clearTimeout(t);
         if (!res.ok) return [];
         return parseFeed(f.source, await res.text());

@@ -2,6 +2,7 @@
 // pure retrieval + cleaning + a price-suggestion helper for pricing pages.
 import { createHash } from "node:crypto";
 import { convert } from "html-to-text";
+import { browserHeaders } from "@/lib/browserHeaders";
 
 export interface Snapshot {
   ok: boolean;
@@ -18,7 +19,7 @@ export async function fetchPage(url: string, timeoutMs = 15000): Promise<Snapsho
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), timeoutMs);
     const res = await fetch(url, {
-      headers: { "user-agent": "CompetitiveIntelBot/0.1 (+manual-fetch)" },
+      headers: browserHeaders(),
       redirect: "follow",
       signal: ctrl.signal,
     });
