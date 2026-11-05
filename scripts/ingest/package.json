@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
-    "html-to-text": "^9.0.5"
+    "html-to-text": "^9.0.5",
+    "playwright": "^1.48.0"
   },
   "devDependencies": {
     "@types/html-to-text": "^9.0.4",

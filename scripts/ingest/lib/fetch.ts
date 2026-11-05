@@ -1,5 +1,5 @@
-import { createHash } from "node:crypto";
-import { convert } from "html-to-text";
+import { BROWSER_HEADERS } from "./headers.js";
+import { cleanHtml, looksLikeChallenge } from "./clean.js";
 
 export interface Fetched {
   ok: boolean;
@@ -9,38 +9,23 @@ export interface Fetched {
   text: string;
   hash: string;
   error?: string;
+  /** Which path produced this result — the plain HTTP fetch or the browser fallback. */
+  method?: "http" | "browser";
 }
 
-// Most competitor sites sit behind a WAF (Cloudflare/Akamai/Imperva) that returns
-// 403 to clients that don't look like a real browser — a "Bot" user-agent or a
-// request missing the headers a browser always sends is enough to be blocked.
-// Present a current-Chrome header set so public pages fetch like a normal visit.
-// Override the UA with INGEST_USER_AGENT if you'd rather identify the crawler
-// (expect more 403s from protected sites if you do).
-const DEFAULT_UA =
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36";
-
-const BROWSER_HEADERS: Record<string, string> = {
-  "user-agent": process.env.INGEST_USER_AGENT || DEFAULT_UA,
-  accept:
-    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-  "accept-language": "en-US,en;q=0.9",
-  "upgrade-insecure-requests": "1",
-  "sec-fetch-dest": "document",
-  "sec-fetch-mode": "navigate",
-  "sec-fetch-site": "none",
-  "sec-fetch-user": "?1",
-  "cache-control": "max-age=0",
-};
-
-/** Fetch a URL and reduce it to clean, boilerplate-stripped text + a hash. */
+/**
+ * Fetch a URL and reduce it to clean, boilerplate-stripped text + a hash.
+ * Tries a plain HTTP fetch first (fast, cheap). If that is blocked (403/429/503),
+ * errors out, or returns a JS/anti-bot challenge page, it escalates to a real
+ * headless browser via Playwright — unless INGEST_BROWSER_FALLBACK=0.
+ */
 export async function fetchAndClean(url: string, timeoutMs = 20000): Promise<Fetched> {
+  const browserFallback = process.env.INGEST_BROWSER_FALLBACK !== "0";
+  let httpResult: Fetched;
+
   try {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), timeoutMs);
-    // Note: accept-encoding is intentionally left unset so Node's fetch manages
-    // compression and decompresses the body for us (setting it manually would
-    // hand back raw gzip/brotli bytes).
     const res = await fetch(url, {
       headers: BROWSER_HEADERS,
       redirect: "follow",
@@ -48,32 +33,41 @@ export async function fetchAndClean(url: string, timeoutMs = 20000): Promise<Fet
     });
     clearTimeout(timer);
     const html = await res.text();
-    const title = (html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1] ?? "").trim() || null;
-    const metaDescription = (
-      html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']*)["']/i)?.[1] ??
-      html.match(/<meta[^>]+content=["']([^"']*)["'][^>]+name=["']description["']/i)?.[1] ??
-      html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']*)["']/i)?.[1] ??
-      ""
-    ).trim() || null;
+    const c = cleanHtml(html);
+    const challenged = looksLikeChallenge(html, c.title);
+    const ok = res.ok && !challenged;
 
-    const text = convert(html, {
-      wordwrap: false,
-      selectors: [
-        { selector: "nav", format: "skip" },
-        { selector: "header", format: "skip" },
-        { selector: "footer", format: "skip" },
-        { selector: "script", format: "skip" },
-        { selector: "style", format: "skip" },
-        { selector: "img", format: "skip" },
-        { selector: "a", options: { ignoreHref: true } },
-      ],
-    })
-      .replace(/\n{3,}/g, "\n\n")
-      .trim();
-
-    const hash = createHash("sha256").update(text).digest("hex");
-    return { ok: res.ok, status: res.status, title, metaDescription, text, hash };
+    if (ok) {
+      return { ok, status: res.status, ...c, method: "http" };
+    }
+    httpResult = {
+      ok,
+      status: res.status,
+      ...c,
+      method: "http",
+      error: challenged ? "JS/anti-bot challenge page" : `HTTP ${res.status}`,
+    };
   } catch (e: unknown) {
-    return { ok: false, status: 0, title: null, metaDescription: null, text: "", hash: "", error: e instanceof Error ? e.message : String(e) };
+    httpResult = {
+      ok: false,
+      status: 0,
+      title: null,
+      metaDescription: null,
+      text: "",
+      hash: "",
+      method: "http",
+      error: e instanceof Error ? e.message : String(e),
+    };
+  }
+
+  if (!browserFallback) return httpResult;
+
+  // Escalate blocked / challenged / errored fetches to a real browser.
+  try {
+    const { fetchWithBrowser } = await import("./browserFetch.js");
+    const b = await fetchWithBrowser(url, Math.max(timeoutMs, 30000));
+    return b.ok ? b : httpResult;
+  } catch {
+    return httpResult;
   }
 }
