@@ -1,45 +1,76 @@
-// Playwright fallback: render a URL in a real headless Chromium so JS-gated and
-// challenge-protected pages (Cloudflare, DataDome, Akamai) resolve to real content.
-// Used only when the plain HTTP fetch is blocked/challenged, so the cost (a few
-// seconds per page) is bounded to the sites that actually need it.
+// Anti-detect browser fallback using Camoufox (a hardened Firefox) driven by
+// Playwright. Plain headless Chromium is detected and blocked by Cloudflare-class
+// bot management ("Just a moment…" 403), which is why this uses Camoufox: it
+// presents a genuine, non-automated browser fingerprint and clears the passive JS
+// challenges those sites serve.
 //
-// Requires `playwright` + a Chromium binary. The ingest workflow installs it with
-// `npx playwright install --with-deps chromium`. If either is missing this returns
-// a normal failure and the caller keeps the HTTP result.
-import { cleanHtml } from "./clean.js";
-import { userAgent } from "./headers.js";
+// Two layers of blocking exist: (1) browser/headless fingerprinting — Camoufox
+// handles this; (2) datacenter-IP reputation — for the hardest sites, set
+// CAMOUFOX_PROXY to a residential/ISP proxy (http(s)://user:pass@host:port) and the
+// browser egresses through it. Without a proxy this still clears most sites, but a
+// few aggressive ones may remain blocked from a datacenter IP.
+//
+// Requires `camoufox-js` + `playwright-core`, and the Camoufox browser downloaded
+// via `npx camoufox-js fetch` (the ingest workflow does this and caches it). If any
+// of that is missing, this returns a normal failure and the caller keeps the HTTP
+// result.
+import { cleanHtml, looksLikeChallenge } from "./clean.js";
 import type { Fetched } from "./fetch.js";
 
-export async function fetchWithBrowser(url: string, timeoutMs = 30000): Promise<Fetched> {
-  // Non-literal specifier so the type-checker doesn't require playwright to be
-  // installed in environments (like the web app) that never call this.
-  const mod = "playwright";
+function proxyFromEnv() {
+  const raw = process.env.CAMOUFOX_PROXY;
+  if (!raw) return undefined;
+  try {
+    const u = new URL(raw);
+    return {
+      server: `${u.protocol}//${u.host}`,
+      username: u.username ? decodeURIComponent(u.username) : undefined,
+      password: u.password ? decodeURIComponent(u.password) : undefined,
+    };
+  } catch {
+    return undefined;
+  }
+}
+
+export async function fetchWithBrowser(url: string, timeoutMs = 45000): Promise<Fetched> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let browser: any;
   try {
-    const { chromium } = (await import(mod)) as any;
-    browser = await chromium.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-blink-features=AutomationControlled"],
+    // Non-literal specifiers so the type-checker doesn't require these (native)
+    // packages to be installed in environments that never run the fallback.
+    const camoufoxMod = "camoufox-js";
+    const pwMod = "playwright-core";
+    const { launchOptions } = (await import(camoufoxMod)) as any;
+    const { firefox } = (await import(pwMod)) as any;
+
+    const proxy = proxyFromEnv();
+    const headless =
+      process.env.CAMOUFOX_HEADLESS === "virtual" ? ("virtual" as const) : true;
+
+    const opts = await launchOptions({
+      headless,
+      humanize: true,
+      block_images: true,
+      ...(proxy ? { proxy, geoip: process.env.CAMOUFOX_GEOIP === "1" } : {}),
     });
-    const context = await browser.newContext({
-      userAgent: userAgent(),
-      locale: "en-US",
-      viewport: { width: 1366, height: 900 },
-    });
+
+    browser = await firefox.launch(opts as any);
+    const context = await browser.newContext();
     const page = await context.newPage();
     const resp = await page.goto(url, { waitUntil: "domcontentloaded", timeout: timeoutMs });
-    // Give an interstitial challenge a moment to clear, then let the page settle.
-    await page.waitForTimeout(2500);
+    // Give an interstitial challenge time to clear, then let the page settle.
+    await page.waitForTimeout(3500);
     try {
-      await page.waitForLoadState("networkidle", { timeout: 5000 });
+      await page.waitForLoadState("networkidle", { timeout: 6000 });
     } catch {
-      /* networkidle is best-effort */
+      /* best-effort */
     }
+
     const status: number = resp?.status() ?? 0;
     const html: string = await page.content();
     const c = cleanHtml(html);
-    const ok = status > 0 && status < 400 && c.text.length > 0;
+    const challenged = looksLikeChallenge(html, c.title);
+    const ok = status > 0 && status < 400 && c.text.length > 0 && !challenged;
     return {
       ok,
       status,
@@ -48,7 +79,11 @@ export async function fetchWithBrowser(url: string, timeoutMs = 30000): Promise<
       text: c.text,
       hash: c.hash,
       method: "browser",
-      error: ok ? undefined : `browser fetch status ${status}`,
+      error: ok
+        ? undefined
+        : challenged
+          ? "anti-bot challenge not cleared (try CAMOUFOX_PROXY)"
+          : `browser fetch status ${status}`,
     };
   } catch (e: unknown) {
     return {

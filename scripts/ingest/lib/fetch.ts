@@ -16,8 +16,8 @@ export interface Fetched {
 /**
  * Fetch a URL and reduce it to clean, boilerplate-stripped text + a hash.
  * Tries a plain HTTP fetch first (fast, cheap). If that is blocked (403/429/503),
- * errors out, or returns a JS/anti-bot challenge page, it escalates to a real
- * headless browser via Playwright — unless INGEST_BROWSER_FALLBACK=0.
+ * errors out, or returns a JS/anti-bot challenge page, it escalates to an
+ * anti-detect browser (Camoufox) — unless INGEST_BROWSER_FALLBACK=0.
  */
 export async function fetchAndClean(url: string, timeoutMs = 20000): Promise<Fetched> {
   const browserFallback = process.env.INGEST_BROWSER_FALLBACK !== "0";
