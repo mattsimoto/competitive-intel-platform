@@ -23,8 +23,9 @@ This repository is private and contains installation-specific calendar and organ
 
 - Dashboard, competitor profiles, product views, pricing, markets and topics, activity, and watchlists.
 - Product-level relationships with an internal portfolio and configurable competitive scoring.
+- Column-selectable CSV and Excel export from every list view (competitors, products, pricing, markets and topics, events, activity, product news, and watchlists), honoring the current filters.
 - CSV import with templates and preview for companies, products, and industry events.
-- Interactive event calendar with list/month views, filters, CSV export, organizer evidence, product links, portfolio comparisons, and date-overlap signals.
+- Interactive event calendar with list/month views, internal vs. competitor lenses, a calendar overlay with date-conflict highlighting, filters, organizer evidence, product links, and portfolio comparisons.
 - Source monitoring, retrieved-page snapshots, content hashing, and change detection.
 - On-demand AI enrichment with source-linked findings and review status.
 - Review Queue with approval, rejection, deferral, duplicate handling, and audit records.
@@ -75,7 +76,7 @@ The private calendar import remains in `scripts/events/calendar-2027.json` and `
 
 **On-demand enrichment:** open a competitor profile and select **Enrich now (AI)**. An Analyst or Administrator can retrieve up to three active sources and request findings through Groq. The app checks supporting quotes against retrieved text and routes findings to review; it does not automatically approve them or treat a current fact as proof of a new launch.
 
-**Crawler:** `scripts/ingest/` retrieves active monitored sources, cleans and hashes pages, stores changed snapshots, and optionally classifies/extracts findings. Unchanged pages do not invoke AI. The private GitHub workflow runs daily at 08:00 UTC in crawl-only mode by default and supports manual full runs. The clean edition's workflow is manual-only.
+**Crawler:** `scripts/ingest/` retrieves active monitored sources, cleans and hashes pages, stores changed snapshots, and optionally classifies/extracts findings. Each source is fetched first over plain HTTP with browser-like headers; if that is blocked (403/429/503) or returns a JavaScript/anti-bot challenge page, it escalates to an anti-detect browser (Camoufox, a hardened Firefox driven by Playwright) that clears the challenge and renders the page. Set `CAMOUFOX_PROXY` to route the browser through a residential/ISP proxy for sites that also block datacenter IPs, or `INGEST_BROWSER_FALLBACK=0` to disable the browser tier. Unchanged pages do not invoke AI. The private GitHub workflow runs daily at 08:00 UTC in crawl-only mode by default, supports manual full runs, and installs and caches the Camoufox browser. The clean edition's workflow is manual-only. The browser tier runs in the crawler only; the in-app **Fetch now** action uses HTTP with browser-like headers.
 
 **Auto-approval:** crawler findings are pending by default. Administrators can explicitly enable rules for eligible change types and confidence thresholds. Pricing can remain subject to review. These settings do not auto-approve on-demand enrichment or event-portfolio comparisons.
 
@@ -88,6 +89,10 @@ The private calendar import remains in `scripts/events/calendar-2027.json` and `
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Publishable/anon key; data access remains subject to Auth and RLS | App build/server environment |
 | `GROQ_API_KEY` | Enrichment, Ask Intelligence, and optional crawler AI | Server environment; crawler secret if enabled there |
 | `GROQ_MODEL` | Optional Groq model override | Server/worker environment |
+| `INGEST_BROWSER_FALLBACK` | Set to `0` to disable the crawler's anti-detect browser tier | Crawler environment |
+| `CAMOUFOX_PROXY` | Residential/ISP proxy (`http(s)://user:pass@host:port`) for the browser tier on datacenter-IP-blocked sites | Crawler secret |
+| `CAMOUFOX_INSTALL_DIR` | Camoufox browser install/cache location (e.g. `/opt/camoufox`) | Crawler environment |
+| `INGEST_USER_AGENT` | Optional override of the crawler's HTTP/browser User-Agent | Crawler environment |
 | `ANTHROPIC_API_KEY` | Optional news synthesis | Server environment |
 | `ENABLE_NEWS_FETCH` | Set to `false` to disable public news retrieval | Server environment |
 | `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | First-install bootstrap and crawler access to the operator's database | Private bootstrap environment or worker secrets only |
@@ -142,6 +147,5 @@ npm run test:schema
 - `tests/membership/database.sql` contains rollback-only membership assertions for a prepared Supabase installation with an administrator.
 - `tests/events/database.sql` contains private-calendar assertions and is excluded from the clean edition.
 - Real invitation email delivery/callbacks and the Docker runtime still require an environment-specific check.
-- Plain HTTP crawling may not retrieve useful content from JavaScript-heavy or blocked websites.
+- The crawler escalates from HTTP to an anti-detect browser (Camoufox) for JavaScript-heavy or bot-protected sites; a few sites that also block datacenter IPs may still require a residential proxy (`CAMOUFOX_PROXY`). The first crawl after enabling the browser tier downloads a ~1.3 GB browser (cached thereafter).
 - Calendar estimates, dates, and imported findings remain subject to their recorded verification status.
-
